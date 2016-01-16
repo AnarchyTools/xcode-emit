@@ -241,9 +241,6 @@ struct PbxGroups : PbxprojSerializable {
             for file in target.target.sourceFiles {
                 s += "            \(file.guid) /* \(file.path) */,\n"
             }
-            for file in target.target.linkFiles {
-                s += "            \(file.guid) /* \(file.path) */,\n"
-            }
             s += "        );\n"
             s += "        path = \".\";\n"
             s += "        name = \"\(target.target.name)\";\n"
@@ -261,12 +258,12 @@ struct PbxNativeTarget: PbxprojSerializable {
     var name : String { return productReference.name }
     let outputType: OutputType 
     let sourceFiles: [PbxSourceFileReference]
-    let linkFiles: [PbxStaticLibraryFileReference]
+    let linkFiles: [PbxProductReference]
     let configurationList = PbxTargetConfigurations()
 
     let phases: PbxPhases
 
-    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxStaticLibraryFileReference] ) {
+    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference] ) {
         self.productReference = productReference
         self.outputType = outputType
         self.phases = PbxPhases(sourceFiles: sourceFiles, linkFiles: linkFiles)
@@ -347,7 +344,7 @@ struct PbxTargetConfigurations: PbxprojSerializable {
 
 struct PbxPhases: PbxprojSerializable {
     let sourceFiles: [PbxSourceFileReference]
-    let linkFiles: [PbxStaticLibraryFileReference]
+    let linkFiles: [PbxProductReference]
     let copyFilesGUID = xcodeguid()
     let sourcesGUID = xcodeguid()
     let frameworksGUID = xcodeguid()
@@ -371,7 +368,7 @@ struct PbxPhases: PbxprojSerializable {
         s += "    buildActionMask = 2147483647;\n"
         s += "    files = (\n"
         for file in linkFiles {
-            s += "        \(file.buildFile.guid) /* \(file.path) in Frameworks */,\n"
+            s += "        \(file.buildFile.guid) /* \(file.name) in Frameworks */,\n"
         }
         s += "    );\n"
         s += "    runOnlyForDeploymentPostprocessing = 0;\n"
@@ -396,8 +393,15 @@ struct PbxPhases: PbxprojSerializable {
 struct PbxProductReference: PbxprojSerializable {
     let name: String
     let guid = xcodeguid()
+    let buildFile: PbxBuildFile
+    init(name: String) {
+        self.name = name
+        self.buildFile = PbxBuildFile(path: name, fileRefGUID: guid)
+    }
     func serialize() -> String {
-        return "\(guid) /* \(name) */ = {isa = PBXFileReference; explicitFileType = \"compiled.mach-o.executable\"; includeInIndex = 0; path = \(name); sourceTree = BUILT_PRODUCTS_DIR; };\n"
+        var s =  "\(guid) /* \(name) */ = {isa = PBXFileReference; explicitFileType = \"compiled.mach-o.executable\"; includeInIndex = 0; path = \(name); sourceTree = BUILT_PRODUCTS_DIR; };\n"
+        s += buildFile.serialize()
+        return s
     }
 }
 

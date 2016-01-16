@@ -83,25 +83,27 @@ func process(task: Task, package: Package) -> [PbxprojSerializable] {
         fatalError("Unsupported output type \(task["outputType"])")
     }
     
-    var linkWith : [String] = []
+    var linkWith : [PbxProductReference] = []
     if let l = task["linkWithProduct"]?.vector {
         for item in l {
             guard let str = item.string else { fatalError("Not string link target \(item)")}
-            linkWith.append(".atllbuild/products/"+str)
+            //find the productRef to link to
+            for object in objects {
+                guard let file = object as? PbxProductReference else { continue }
+                linkWith.append(file)
+            }
         }
     }
     let product = PbxProductReference(name: taskname)
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
-    let linkRefs = linkWith.map() {PbxStaticLibraryFileReference(path:$0)}
 
-    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkRefs)
+    
+
+    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith)
     objects.append(target)
     objects.append(product)
     for sourceRef in sourceRefs {
         objects.append(sourceRef)
-    }
-    for linkRef in linkRefs {
-        objects.append(linkRef)
     }
     return objects
 }
