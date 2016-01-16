@@ -199,17 +199,27 @@ struct PbxConfigurationHacks : PbxprojSerializable {
     }
 }
 
+
 struct PbxGroups : PbxprojSerializable {
-    let productReference: PbxProductReference
-    let sourceFiles: [PbxSourceFileReference]
-    let linkFiles: [PbxStaticLibraryFileReference]
+
+    struct PbxGroupTarget {
+        let target: PbxNativeTarget
+        let sourceGroupGUID: String = xcodeguid()
+    }
+
+    let targets: [PbxGroupTarget]
+    init(targets: [PbxNativeTarget]) {
+        self.targets = targets.map() {PbxGroupTarget(target: $0)}
+    }
     func serialize() -> String {
         var s = ""
         s += "/* Begin PBXGroup section */\n"
         s += "    3ACD1A791C4ADB0A001919F6 = {\n"
         s += "        isa = PBXGroup;\n"
         s += "        children = (\n"
-        s += "            3ACD1A841C4ADB0A001919F6 /* \(productReference.name) */,\n"
+        for target in targets {
+            s += "            \(target.sourceGroupGUID) /* \(target.target.productReference.name) */,\n"
+        }
         s += "            3ACD1A831C4ADB0A001919F6 /* Products */,\n"
         s += "        );\n"
         s += "        sourceTree = \"<group>\";\n"
@@ -217,24 +227,28 @@ struct PbxGroups : PbxprojSerializable {
         s += "    3ACD1A831C4ADB0A001919F6 /* Products */ = {\n"
         s += "        isa = PBXGroup;\n"
         s += "        children = (\n"
-        s += "            \(productReference.guid) /* \(productReference.name) */,\n"
+        for target in targets {
+            s += "            \(target.target.productReference.guid) /* \(target.target.productReference.name) */,\n"
+        }
         s += "        );\n"
         s += "        name = Products;\n"
         s += "        sourceTree = \"<group>\";\n"
         s += "    };\n"
-        s += "    3ACD1A841C4ADB0A001919F6 /* \(productReference.name) */ = {\n"
-        s += "        isa = PBXGroup;\n"
-        s += "        children = (\n"
-        for file in sourceFiles {
-            s += "            \(file.guid) /* \(file.path) */,\n"
+        for target in targets {
+            s += "    \(target.sourceGroupGUID) /* \(target.target.productReference.name) */ = {\n"
+            s += "        isa = PBXGroup;\n"
+            s += "        children = (\n"
+            for file in target.target.sourceFiles {
+                s += "            \(file.guid) /* \(file.path) */,\n"
+            }
+            for file in target.target.linkFiles {
+                s += "            \(file.guid) /* \(file.path) */,\n"
+            }
+            s += "        );\n"
+            s += "        path = \".\";\n"
+            s += "        sourceTree = \"<group>\";\n"
+            s += "    };\n"
         }
-        for file in linkFiles {
-            s += "            \(file.guid) /* \(file.path) */,\n"
-        }
-        s += "        );\n"
-        s += "        path = \".\";\n"
-        s += "        sourceTree = \"<group>\";\n"
-        s += "    };\n"
         s += "/* End PBXGroup section */\n"
         return s
     }

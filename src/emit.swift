@@ -94,10 +94,9 @@ func process(task: Task, package: Package) -> [PbxprojSerializable] {
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
     let linkRefs = linkWith.map() {PbxStaticLibraryFileReference(path:$0)}
 
-    let groups = PbxGroups(productReference: product, sourceFiles: sourceRefs, linkFiles: linkRefs)
     let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkRefs)
-    let otmp: [PbxprojSerializable] = [groups, target, product]
-    objects.appendContentsOf(otmp)
+    objects.append(target)
+    objects.append(product)
     for sourceRef in sourceRefs {
         objects.append(sourceRef)
     }
@@ -117,6 +116,8 @@ func pbxproj(task: Task, package: Package) -> String {
     }
     let project = Pbxproject(targets: targets)
     objects.append(project)
+    let groups = PbxGroups(targets: targets)
+    objects.append(groups)
     var p = Pbxproj(objects: objects, rootObjectGUID: project.guid)
     return p.serialize()
 }
