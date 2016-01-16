@@ -204,3 +204,45 @@ struct PbxConfigurationHacks : PbxprojSerializable {
         return s
     }
 }
+
+struct PbxGroups : PbxprojSerializable {
+    let productReference: PbxFileReference
+    func serialize() -> String {
+        var s = ""
+        s += "/* Begin PBXGroup section */\n"
+        s += "    3ACD1A791C4ADB0A001919F6 = {\n"
+        s += "        isa = PBXGroup;\n"
+        s += "        children = (\n"
+        s += "            3ACD1A841C4ADB0A001919F6 /* \(productReference.name) */,\n"
+        s += "            3ACD1A831C4ADB0A001919F6 /* Products */,\n"
+        s += "        );\n"
+        s += "        sourceTree = \"<group>\";\n"
+        s += "    };\n"
+        s += "    3ACD1A831C4ADB0A001919F6 /* Products */ = {\n"
+        s += "        isa = PBXGroup;\n"
+        s += "        children = (\n"
+        //todo: guid
+        //s += "            3ACD1A821C4ADB0A001919F6 /* \(productReference.name) */,\n"
+        s += "        );\n"
+        s += "        name = Products;\n"
+        s += "        sourceTree = \"<group>\";\n"
+        s += "    };\n"
+        s += "    3ACD1A841C4ADB0A001919F6 /* \(productReference.name) */ = {\n"
+        s += "        isa = PBXGroup;\n"
+        s += "        children = (\n"
+        //todo: emit files
+        //s += "            3ACD1A851C4ADB0A001919F6 /* main.swift */,\n"
+        //s += "            3ACD1A8C1C4ADB3D001919F6 /* atpkg.a */,\n"
+        s += "        );\n"
+        s += "        path = \(productReference.name);\n"
+        s += "        sourceTree = \"<group>\";\n"
+        s += "    };\n"
+        s += "/* End PBXGroup section */\n"
+        return s
+    }
+}
+
+struct PbxFileReference {
+    let name: String
+    let guid = xcodeguid()
+}

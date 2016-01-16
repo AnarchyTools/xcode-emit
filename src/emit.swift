@@ -58,15 +58,17 @@ func emit(task: Task) {
 
     //emit the pbxproj
     if task["outputType"]?.string != "executable" { fatalError("Non-executable type \(task["outputType"]) unsupported.  Please file a bug.")}
-    let str = pbxproj(sources: sources, outputType: OutputType.Executable)
+    let str = pbxproj(sources: sources, outputType: OutputType.Executable, name: taskname)
     try! str.writeToFile("\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
 
 
 }
 
-func pbxproj(sources sources: [String], outputType: OutputType) -> String {
+func pbxproj(sources sources: [String], outputType: OutputType, name: String) -> String {
     let project = Pbxproject()
     let hacks = PbxConfigurationHacks()
-    var p = Pbxproj(objects: [project, hacks], rootObjectGUID: project.guid)
+    let product = PbxFileReference(name: name)
+    let groups = PbxGroups(productReference: product)
+    var p = Pbxproj(objects: [project, hacks, groups], rootObjectGUID: project.guid)
     return p.serialize()
 }
