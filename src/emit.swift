@@ -90,7 +90,12 @@ func process(task: Task, package: Package) -> [PbxprojSerializable] {
             //find the productRef to link to
             for object in objects {
                 guard let file = object as? PbxProductReference else { continue }
-                linkWith.append(file)
+                precondition(str.hasSuffix(".a")) //not sure what to do in this case
+                if file.name + ".a" == str {
+                    linkWith.append(file)
+                    break
+                }
+                else { print("didn't match \(file.name) \(str)") }
             }
         }
     }
