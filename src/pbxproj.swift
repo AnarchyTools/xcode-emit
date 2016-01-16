@@ -259,6 +259,18 @@ struct PbxNativeTarget: PbxprojSerializable {
     let productReference: PbxProductReference
     var name : String { return productReference.name }
     let outputType: OutputType 
+    let sourceFiles: [PbxSourceFileReference]
+    let linkFiles: [PbxStaticLibraryFileReference]
+
+    let phases: PbxPhases
+
+    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxStaticLibraryFileReference] ) {
+        self.productReference = productReference
+        self.outputType = outputType
+        self.phases = PbxPhases(sourceFiles: sourceFiles, linkFiles: linkFiles)
+        self.sourceFiles = sourceFiles
+        self.linkFiles = linkFiles
+    }
     func serialize() -> String {
         var s = ""
         s += "/* Begin PBXNativeTarget section */\n"
@@ -287,6 +299,8 @@ struct PbxNativeTarget: PbxprojSerializable {
         }
         s += "};\n"
         s += "/* End PBXNativeTarget section */\n"
+
+        s += phases.serialize()
         return s
     }
 }
@@ -294,10 +308,14 @@ struct PbxNativeTarget: PbxprojSerializable {
 struct PbxPhases: PbxprojSerializable {
     let sourceFiles: [PbxSourceFileReference]
     let linkFiles: [PbxStaticLibraryFileReference]
+    let copyFilesGUID = xcodeguid()
+    let sourcesGUID = xcodeguid()
+    let frameworksGUID = xcodeguid()
+
     func serialize() -> String {
         var s = ""
         s += "/* Begin PBXCopyFilesBuildPhase section */\n"
-        s += "3ACD1A801C4ADB0A001919F6 /* CopyFiles */ = {\n"
+        s += "\(copyFilesGUID) /* CopyFiles */ = {\n"
         s += "    isa = PBXCopyFilesBuildPhase;\n"
         s += "    buildActionMask = 2147483647;\n"
         s += "    dstPath = /usr/share/man/man1/;\n"
@@ -308,7 +326,7 @@ struct PbxPhases: PbxprojSerializable {
         s += "};\n"
         s += "/* End PBXCopyFilesBuildPhase section */\n"
         s += "/* Begin PBXFrameworksBuildPhase section */\n"
-        s += "3ACD1A7F1C4ADB0A001919F6 /* Frameworks */ = {\n"
+        s += "\(frameworksGUID) /* Frameworks */ = {\n"
         s += "    isa = PBXFrameworksBuildPhase;\n"
         s += "    buildActionMask = 2147483647;\n"
         s += "    files = (\n"
@@ -320,7 +338,7 @@ struct PbxPhases: PbxprojSerializable {
         s += "};\n"
         s += "/* End PBXFrameworksBuildPhase section */\n"
         s += "/* Begin PBXSourcesBuildPhase section */\n"
-        s += "3ACD1A7E1C4ADB0A001919F6 /* Sources */ = {\n"
+        s += "\(sourcesGUID) /* Sources */ = {\n"
         s += "    isa = PBXSourcesBuildPhase;\n"
         s += "    buildActionMask = 2147483647;\n"
         s += "    files = (\n"

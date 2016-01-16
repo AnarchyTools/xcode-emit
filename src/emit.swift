@@ -90,10 +90,9 @@ func pbxproj(sources sources: [String], linkWith: [String], outputType: OutputTy
     let linkRefs = linkWith.map() {PbxStaticLibraryFileReference(path:$0)}
 
     let groups = PbxGroups(productReference: product, sourceFiles: sourceRefs, linkFiles: linkRefs)
-    let target = PbxNativeTarget(productReference: product, outputType: outputType)
-    let phases = PbxPhases(sourceFiles: sourceRefs, linkFiles: linkRefs)
+    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkRefs)
     let project = Pbxproject(targets: [target])
-    var objects : [PbxprojSerializable] = [project, hacks, groups, target, product, phases]
+    var objects : [PbxprojSerializable] = [project, hacks, groups, target, product]
     for sourceRef in sourceRefs {
         objects.append(sourceRef)
     }
