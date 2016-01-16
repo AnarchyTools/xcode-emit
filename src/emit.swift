@@ -40,21 +40,32 @@ func collectSources(sourceDescriptions: [String]) -> [String] {
     return sources
 }
 
+enum OutputType {
+    case Executable
+}
+
 import atpkg
 func emit(task: Task) {
     precondition(task.tool == "atllbuild", "Unsupported tool \(task.tool)")
     guard let sourceDescriptions = task["source"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
     let sources = collectSources(sourceDescriptions)
-    let str = pbxproj()
     //make the xcodeproj directory
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     let xcodeproj = taskname+".xcodeproj"
     let manager = NSFileManager.defaultManager()
     let _ = try? manager.removeItemAtPath(xcodeproj)
     try! manager.createDirectoryAtPath(xcodeproj, withIntermediateDirectories: false, attributes: nil)
+
+    //emit the pbxproj
+    if task["outputType"]?.string != "executable" { fatalError("Non-executable type \(task["outputType"]) unsupported.  Please file a bug.")}
+    let str = pbxproj(sources: sources, outputType: OutputType.Executable)
     try! str.writeToFile("\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
+
+
 }
 
-func pbxproj() -> String {
-    return "Invalid."
+func pbxproj(sources sources: [String], outputType: OutputType) -> String {
+    let project = Pbxproject()
+    var p = Pbxproj(objects: [project], rootObjectGUID: project.guid)
+    return p.serialize()
 }
