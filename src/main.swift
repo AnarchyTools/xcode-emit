@@ -36,4 +36,4 @@ if Process.arguments.count <= 1 {
 
 let taskName = Process.arguments[1]
 guard let task = package.tasks[taskName] else { fatalError("Can't find task named \(taskName)")}
-emit(task)
+emit(task, package: package)

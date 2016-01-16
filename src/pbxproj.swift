@@ -192,22 +192,6 @@ struct PbxConfigurationHacks : PbxprojSerializable {
         s += "    };\n"
         s += "    name = Release;\n"
         s += "};\n"
-        s += "3ACD1A8A1C4ADB0A001919F6 /* Debug */ = {\n"
-        s += "    isa = XCBuildConfiguration;\n"
-        s += "    buildSettings = {\n"
-        s += "        PRODUCT_NAME = \"$(TARGET_NAME)\";\n"
-        s += "        SWIFT_INCLUDE_PATHS = .atllbuild/products/;\n"
-        s += "    };\n"
-        s += "    name = Debug;\n"
-        s += "};\n"
-        s += "3ACD1A8B1C4ADB0A001919F6 /* Release */ = {\n"
-        s += "    isa = XCBuildConfiguration;\n"
-        s += "    buildSettings = {\n"
-        s += "        PRODUCT_NAME = \"$(TARGET_NAME)\";\n"
-        s += "        SWIFT_INCLUDE_PATHS = .atllbuild/products/;\n"
-        s += "    };\n"
-        s += "    name = Release;\n"
-        s += "};\n"
         s += "/* End XCBuildConfiguration section */\n"
         return s
     }
@@ -261,6 +245,7 @@ struct PbxNativeTarget: PbxprojSerializable {
     let outputType: OutputType 
     let sourceFiles: [PbxSourceFileReference]
     let linkFiles: [PbxStaticLibraryFileReference]
+    let configurationList = PbxTargetConfigurations()
 
     let phases: PbxPhases
 
@@ -277,7 +262,7 @@ struct PbxNativeTarget: PbxprojSerializable {
         s += "\(guid) /*  */ = {\n"
         s += "    isa = PBXNativeTarget;\n"
         //this depends on PbxConfigurationHacks
-        s += "    buildConfigurationList = 3ACD1A891C4ADB0A001919F6 /* Build configuration list for PBXNativeTarget */;\n"
+        s += "    buildConfigurationList = \(configurationList.guid) /* Build configuration list for PBXNativeTarget */;\n"
         s += "    buildPhases = (\n"
         s += "        3ACD1A7E1C4ADB0A001919F6 /* Sources */,\n"
         s += "        3ACD1A7F1C4ADB0A001919F6 /* Frameworks */,\n"
@@ -301,6 +286,42 @@ struct PbxNativeTarget: PbxprojSerializable {
         s += "/* End PBXNativeTarget section */\n"
 
         s += phases.serialize()
+        return s
+    }
+}
+
+struct PbxTargetConfigurations: PbxprojSerializable {
+    let guid = xcodeguid()
+    let debugGUID = xcodeguid()
+    let releaseGUID = xcodeguid()
+    func serialize() -> String {
+        var s = ""
+        s += "\(guid) /* Build configuration list for PBXNativeTarget */ = {\n"
+        s += "    isa = XCConfigurationList;\n"
+        s += "    buildConfigurations = (\n"
+        s += "        \(debugGUID) /* Debug */,\n"
+        s += "        \(releaseGUID) /* Release */,\n"
+        s += "    );\n"
+        s += "    defaultConfigurationIsVisible = 0;\n"
+        s += "};\n"
+        s += "\(debugGUID) /* Debug */ = {\n"
+        s += "    isa = XCBuildConfiguration;\n"
+        s += "    buildSettings = {\n"
+        s += "        PRODUCT_NAME = \"$(TARGET_NAME)\";\n"
+        //todo: do we need this?
+        //s += "        SWIFT_INCLUDE_PATHS = .atllbuild/products/;\n"
+        s += "    };\n"
+        s += "    name = Debug;\n"
+        s += "};\n"
+        s += "\(releaseGUID) /* Release */ = {\n"
+        s += "    isa = XCBuildConfiguration;\n"
+        s += "    buildSettings = {\n"
+        s += "        PRODUCT_NAME = \"$(TARGET_NAME)\";\n"
+        //todo: do we need this?
+        //s += "        SWIFT_INCLUDE_PATHS = .atllbuild/products/;\n"
+        s += "    };\n"
+        s += "    name = Release;\n"
+        s += "};\n"
         return s
     }
 }

@@ -46,17 +46,31 @@ enum OutputType {
 }
 
 import atpkg
-func emit(task: Task) {
+func emit(task: Task, package: Package) {
     precondition(task.tool == "atllbuild", "Unsupported tool \(task.tool)")
-    guard let sourceDescriptions = task["source"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
-    let sources = collectSources(sourceDescriptions)
     //make the xcodeproj directory
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     let xcodeproj = taskname+".xcodeproj"
     let manager = NSFileManager.defaultManager()
     let _ = try? manager.removeItemAtPath(xcodeproj)
     try! manager.createDirectoryAtPath(xcodeproj, withIntermediateDirectories: false, attributes: nil)
+    let str = pbxproj(task, package: package)
+    try! str.writeToFile("\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
+}
 
+func process(task: Task, package: Package) -> [PbxprojSerializable] {
+    //are there dependencies?
+    var objects: [PbxprojSerializable] = []
+    if let dependencies = task["dependencies"]?.vector {
+        for dependency in dependencies {
+            guard let depname = dependency.string else { fatalError("Non-string dependency \(dependency)")}
+            guard let dep = package.tasks[depname] else { fatalError("Can't find dependency \(depname)")}
+            objects.appendContentsOf(process(dep, package: package))
+        }
+    }
+    guard let taskname = task["name"]?.string else { fatalError("No task name.")}
+    guard let sourceDescriptions = task["source"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
+    let sources = collectSources(sourceDescriptions)
     //emit the pbxproj
     let outputType : OutputType
     if task["outputType"]?.string == "executable" {
@@ -77,28 +91,34 @@ func emit(task: Task) {
         }
     }
 
-    let str = pbxproj(sources: sources, linkWith: linkWith, outputType: outputType, name: taskname)
-    try! str.writeToFile("\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
-
-
-}
-
-func pbxproj(sources sources: [String], linkWith: [String], outputType: OutputType, name: String) -> String {
     let hacks = PbxConfigurationHacks()
-    let product = PbxProductReference(name: name)
+    let product = PbxProductReference(name: taskname)
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
     let linkRefs = linkWith.map() {PbxStaticLibraryFileReference(path:$0)}
 
     let groups = PbxGroups(productReference: product, sourceFiles: sourceRefs, linkFiles: linkRefs)
     let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkRefs)
-    let project = Pbxproject(targets: [target])
-    var objects : [PbxprojSerializable] = [project, hacks, groups, target, product]
+    let otmp: [PbxprojSerializable] = [hacks, groups, target, product]
+    objects.appendContentsOf(otmp)
     for sourceRef in sourceRefs {
         objects.append(sourceRef)
     }
     for linkRef in linkRefs {
         objects.append(linkRef)
     }
+    return objects
+}
+
+func pbxproj(task: Task, package: Package) -> String {
+    var targets : [PbxNativeTarget] = []
+    var objects = process(task, package: package)
+    for object in objects {
+        if object.dynamicType == PbxNativeTarget.self {
+            targets.append(object as! PbxNativeTarget)
+        }
+    }
+    let project = Pbxproject(targets: targets)
+    objects.append(project)
     var p = Pbxproj(objects: objects, rootObjectGUID: project.guid)
     return p.serialize()
 }
