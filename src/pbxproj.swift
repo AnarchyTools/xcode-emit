@@ -246,6 +246,7 @@ struct PbxGroups : PbxprojSerializable {
             }
             s += "        );\n"
             s += "        path = \".\";\n"
+            s += "        name = \"\(target.target.name)\";\n"
             s += "        sourceTree = \"<group>\";\n"
             s += "    };\n"
         }
