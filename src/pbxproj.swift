@@ -213,6 +213,7 @@ struct PbxConfigurationHacks : PbxprojSerializable {
 
 struct PbxGroups : PbxprojSerializable {
     let productReference: PbxProductReference
+    let sourceFiles: [PbxSourceFileReference]
     func serialize() -> String {
         var s = ""
         s += "/* Begin PBXGroup section */\n"
@@ -235,6 +236,9 @@ struct PbxGroups : PbxprojSerializable {
         s += "    3ACD1A841C4ADB0A001919F6 /* \(productReference.name) */ = {\n"
         s += "        isa = PBXGroup;\n"
         s += "        children = (\n"
+        for file in sourceFiles {
+            s += "            \(file.guid) /* \(file.path) */,\n"
+        }
         //todo: emit files
         //s += "            3ACD1A851C4ADB0A001919F6 /* main.swift */,\n"
         //s += "            3ACD1A8C1C4ADB3D001919F6 /* atpkg.a */,\n"
@@ -278,6 +282,7 @@ struct PbxNativeTarget: PbxprojSerializable {
 }
 
 struct PbxPhases: PbxprojSerializable {
+    let sourceFiles: [PbxSourceFileReference]
     func serialize() -> String {
         var s = ""
         s += "/* Begin PBXCopyFilesBuildPhase section */\n"
@@ -307,8 +312,9 @@ struct PbxPhases: PbxprojSerializable {
         s += "    isa = PBXSourcesBuildPhase;\n"
         s += "    buildActionMask = 2147483647;\n"
         s += "    files = (\n"
-        //todo
-        //s += "        3ACD1A861C4ADB0A001919F6 /* main.swift in Sources */,\n"
+        for file in sourceFiles {
+            s += "        \(file.buildFile.guid) /* \(file.path) in Sources */,\n"
+        }
         s += "    );\n"
         s += "    runOnlyForDeploymentPostprocessing = 0;\n"
         s += "};\n"
@@ -325,7 +331,27 @@ struct PbxProductReference: PbxprojSerializable {
     }
 }
 
-struct PbxFileReference {
-    let name: String
+struct PbxBuildFile: PbxprojSerializable {
     let guid = xcodeguid()
+    let path: String
+    let fileRefGUID: String
+    func serialize() -> String {
+        return "\(guid) /* \(path) in Sources */ = {isa = PBXBuildFile; fileRef = \(fileRefGUID) /* \(path) */; };\n"
+    }
+}
+
+struct PbxSourceFileReference: PbxprojSerializable  {
+    let path: String
+    let guid = xcodeguid()
+    let buildFile : PbxBuildFile
+    init(path: String) {
+        self.path = path
+        buildFile = PbxBuildFile(path: path, fileRefGUID: guid)
+    }
+    func serialize() -> String {
+        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = \(path); sourceTree = \"<group>\"; };\n"
+        s += buildFile.serialize()
+        return s
+    }
+
 }

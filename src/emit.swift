@@ -67,11 +67,16 @@ func emit(task: Task) {
 func pbxproj(sources sources: [String], outputType: OutputType, name: String) -> String {
     let hacks = PbxConfigurationHacks()
     let product = PbxProductReference(name: name)
-    let groups = PbxGroups(productReference: product)
+    let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
+    let groups = PbxGroups(productReference: product, sourceFiles: sourceRefs)
     let target = PbxNativeTarget(productReference: product)
-    let phases = PbxPhases()
+    let phases = PbxPhases(sourceFiles: sourceRefs)
     let project = Pbxproject(targets: [target])
+    var objects : [PbxprojSerializable] = [project, hacks, groups, target, product, phases]
 
-    var p = Pbxproj(objects: [project, hacks, groups, target, product, phases], rootObjectGUID: project.guid)
+    for sourceRef in sourceRefs {
+        objects.append(sourceRef)
+    }
+    var p = Pbxproj(objects: objects, rootObjectGUID: project.guid)
     return p.serialize()
 }
