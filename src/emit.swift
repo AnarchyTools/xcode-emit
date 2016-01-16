@@ -125,6 +125,6 @@ func pbxproj(task: Task, package: Package) -> String {
     objects.append(project)
     let groups = PbxGroups(targets: targets)
     objects.append(groups)
-    var p = Pbxproj(objects: objects, rootObjectGUID: project.guid)
+    let p = Pbxproj(objects: objects, rootObjectGUID: project.guid)
     return p.serialize()
 }
