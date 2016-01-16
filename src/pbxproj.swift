@@ -324,8 +324,10 @@ struct PbxTargetConfigurations: PbxprojSerializable {
         s += "    isa = XCBuildConfiguration;\n"
         s += "    buildSettings = {\n"
         s += "        PRODUCT_NAME = \"$(TARGET_NAME)\";\n"
-        //todo: do we need this?
-        //s += "        SWIFT_INCLUDE_PATHS = .atllbuild/products/;\n"
+        //particularly when building a dynamic library, we need to tell Swift where to find its standard library
+        s += "        LD_RUNPATH_SEARCH_PATHS = \"/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/lib/swift/macosx/\";\n"
+        //once we give it its standard library dynamically, let's force the executable not to include it.
+        s += "        SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;\n"
         s += "    };\n"
         s += "    name = Debug;\n"
         s += "};\n"
