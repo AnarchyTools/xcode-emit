@@ -14,10 +14,26 @@
 
 let version = "0.1.0-dev"
 
+import Foundation
+import atpkg
+
 func usage() {
     print("xcode-emit \(version)")
     print("© 2016 Anarchy Tools Contributors.")
+    print()
+    print("Usage: xcode-emit [task]")
 }
 
-usage()
+guard let package = Package(filepath:"build.atpkg") else { fatalError("Can't load build.atpkg")}
 
+print("ended successfully.")
+
+
+if Process.arguments.count <= 1 {
+    usage()
+    exit(1)
+}
+
+let taskName = Process.arguments[1]
+guard let task = package.tasks[taskName] else { fatalError("Can't find task named \(taskName)")}
+emit(task)
