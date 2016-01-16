@@ -1,0 +1,3 @@
+[submodule "atpkg"]
+	path = atpkg
+	url = git@github.com:AnarchyTools/atpkg.git
