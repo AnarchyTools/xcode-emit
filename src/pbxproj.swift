@@ -46,7 +46,9 @@ struct Pbxproj: PbxprojSerializable {
 }
 
 struct Pbxproject: PbxprojSerializable {
-    var guid = xcodeguid()
+    let guid = xcodeguid()
+    var targets: [PbxNativeTarget]
+
     func serialize() -> String {
         var s = "/* Begin PBXProject section */\n"
         s += "\(guid) /* Project object */= {\n"
@@ -56,9 +58,11 @@ struct Pbxproject: PbxprojSerializable {
         s += "      LastUpgradeCheck = 0720;\n"
         s += "      ORGANIZATIONNAME = \"Anarchy Tools\";\n"
         s += "      TargetAttributes = {\n"
-        s += "          3ACD1A811C4ADB0A001919F6 = {\n"
-        s += "              CreatedOnToolsVersion = 7.2;\n"
-        s += "          };\n"
+        for target in targets {
+            s += "          \(target.guid) = {\n"
+            s += "              CreatedOnToolsVersion = 7.2;\n"
+            s += "          };\n"
+        }
         s += "      };\n"
         s += "  };\n"
         //this guid comes from PbxConfigurationHacks
@@ -74,7 +78,9 @@ struct Pbxproject: PbxprojSerializable {
         s += "  projectDirPath = \"\";\n"
         s += "  projectRoot = \"\";\n"
         s += "  targets = (\n"
-        s += "      3ACD1A811C4ADB0A001919F6 /*  */, \n"
+        for target in targets {
+            s += "      \(target.guid) /* \(target.name) */, \n"
+        }
         s += "  );\n"
         s += "};\n"
         return s
@@ -244,6 +250,7 @@ struct PbxGroups : PbxprojSerializable {
 struct PbxNativeTarget: PbxprojSerializable {
     let guid = xcodeguid()
     let productReference: PbxProductReference
+    var name : String { return productReference.name }
     func serialize() -> String {
         var s = ""
         s += "/* Begin PBXNativeTarget section */\n"
@@ -252,10 +259,9 @@ struct PbxNativeTarget: PbxprojSerializable {
         //this depends on PbxConfigurationHacks
         s += "    buildConfigurationList = 3ACD1A891C4ADB0A001919F6 /* Build configuration list for PBXNativeTarget */;\n"
         s += "    buildPhases = (\n"
-        //todo
-        //s += "        3ACD1A7E1C4ADB0A001919F6 /* Sources */,\n"
-        //s += "        3ACD1A7F1C4ADB0A001919F6 /* Frameworks */,\n"
-        //s += "        3ACD1A801C4ADB0A001919F6 /* CopyFiles */,\n"
+        s += "        3ACD1A7E1C4ADB0A001919F6 /* Sources */,\n"
+        s += "        3ACD1A7F1C4ADB0A001919F6 /* Frameworks */,\n"
+        s += "        3ACD1A801C4ADB0A001919F6 /* CopyFiles */,\n"
         s += "    );\n"
         s += "    buildRules = (\n"
         s += "    );\n"
@@ -267,6 +273,46 @@ struct PbxNativeTarget: PbxprojSerializable {
         s += "    productType = \"com.apple.product-type.tool\";\n"
         s += "};\n"
         s += "/* End PBXNativeTarget section */\n"
+        return s
+    }
+}
+
+struct PbxPhases: PbxprojSerializable {
+    func serialize() -> String {
+        var s = ""
+        s += "/* Begin PBXCopyFilesBuildPhase section */\n"
+        s += "3ACD1A801C4ADB0A001919F6 /* CopyFiles */ = {\n"
+        s += "    isa = PBXCopyFilesBuildPhase;\n"
+        s += "    buildActionMask = 2147483647;\n"
+        s += "    dstPath = /usr/share/man/man1/;\n"
+        s += "    dstSubfolderSpec = 0;\n"
+        s += "    files = (\n"
+        s += "    );\n"
+        s += "    runOnlyForDeploymentPostprocessing = 1;\n"
+        s += "};\n"
+        s += "/* End PBXCopyFilesBuildPhase section */\n"
+        s += "/* Begin PBXFrameworksBuildPhase section */\n"
+        s += "3ACD1A7F1C4ADB0A001919F6 /* Frameworks */ = {\n"
+        s += "    isa = PBXFrameworksBuildPhase;\n"
+        s += "    buildActionMask = 2147483647;\n"
+        s += "    files = (\n"
+        //todo
+        //s += "        3ACD1A8D1C4ADB3D001919F6 /* atpkg.a in Frameworks */,\n"
+        s += "    );\n"
+        s += "    runOnlyForDeploymentPostprocessing = 0;\n"
+        s += "};\n"
+        s += "/* End PBXFrameworksBuildPhase section */\n"
+        s += "/* Begin PBXSourcesBuildPhase section */\n"
+        s += "3ACD1A7E1C4ADB0A001919F6 /* Sources */ = {\n"
+        s += "    isa = PBXSourcesBuildPhase;\n"
+        s += "    buildActionMask = 2147483647;\n"
+        s += "    files = (\n"
+        //todo
+        //s += "        3ACD1A861C4ADB0A001919F6 /* main.swift in Sources */,\n"
+        s += "    );\n"
+        s += "    runOnlyForDeploymentPostprocessing = 0;\n"
+        s += "};\n"
+        s += "/* End PBXSourcesBuildPhase section */\n"
         return s
     }
 }
