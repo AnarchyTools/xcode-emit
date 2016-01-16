@@ -42,6 +42,7 @@ func collectSources(sourceDescriptions: [String]) -> [String] {
 
 enum OutputType {
     case Executable
+    case StaticLibrary
 }
 
 import atpkg
@@ -57,7 +58,16 @@ func emit(task: Task) {
     try! manager.createDirectoryAtPath(xcodeproj, withIntermediateDirectories: false, attributes: nil)
 
     //emit the pbxproj
-    if task["outputType"]?.string != "executable" { fatalError("Non-executable type \(task["outputType"]) unsupported.  Please file a bug.")}
+    let outputType : OutputType
+    if task["outputType"]?.string == "executable" {
+        outputType = .Executable
+    }
+    else if task["outputType"]?.string == "static-library" {
+        outputType = .StaticLibrary
+    }
+    else {
+        fatalError("Unsupported output type \(task["outputType"])")
+    }
     
     var linkWith : [String] = []
     if let l = task["linkWithProduct"]?.vector {
@@ -67,7 +77,7 @@ func emit(task: Task) {
         }
     }
 
-    let str = pbxproj(sources: sources, linkWith: linkWith, outputType: OutputType.Executable, name: taskname)
+    let str = pbxproj(sources: sources, linkWith: linkWith, outputType: outputType, name: taskname)
     try! str.writeToFile("\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
 
 
@@ -80,7 +90,7 @@ func pbxproj(sources sources: [String], linkWith: [String], outputType: OutputTy
     let linkRefs = linkWith.map() {PbxStaticLibraryFileReference(path:$0)}
 
     let groups = PbxGroups(productReference: product, sourceFiles: sourceRefs, linkFiles: linkRefs)
-    let target = PbxNativeTarget(productReference: product)
+    let target = PbxNativeTarget(productReference: product, outputType: outputType)
     let phases = PbxPhases(sourceFiles: sourceRefs, linkFiles: linkRefs)
     let project = Pbxproject(targets: [target])
     var objects : [PbxprojSerializable] = [project, hacks, groups, target, product, phases]

@@ -258,6 +258,7 @@ struct PbxNativeTarget: PbxprojSerializable {
     let guid = xcodeguid()
     let productReference: PbxProductReference
     var name : String { return productReference.name }
+    let outputType: OutputType 
     func serialize() -> String {
         var s = ""
         s += "/* Begin PBXNativeTarget section */\n"
@@ -277,7 +278,13 @@ struct PbxNativeTarget: PbxprojSerializable {
         s += "    name = \(name);\n"
         s += "    productName = \(name);\n"
         s += "    productReference = \(productReference.guid) /* \(productReference.name) */;\n"
-        s += "    productType = \"com.apple.product-type.tool\";\n"
+        switch outputType {
+        case .Executable:
+            s += "    productType = \"com.apple.product-type.tool\";\n"
+        case .StaticLibrary:
+            print("Warning: working around rdar://24221024")
+            s += "    productType = \"com.apple.product-type.library.dynamic\";"
+        }
         s += "};\n"
         s += "/* End PBXNativeTarget section */\n"
         return s
