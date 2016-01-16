@@ -48,6 +48,7 @@ struct Pbxproj: PbxprojSerializable {
 struct Pbxproject: PbxprojSerializable {
     let guid = xcodeguid()
     var targets: [PbxNativeTarget]
+    let hacks = PbxConfigurationHacks()
 
     func serialize() -> String {
         var s = "/* Begin PBXProject section */\n"
@@ -83,6 +84,7 @@ struct Pbxproject: PbxprojSerializable {
         }
         s += "  );\n"
         s += "};\n"
+        s += hacks.serialize()
         return s
     }
 }
@@ -264,9 +266,9 @@ struct PbxNativeTarget: PbxprojSerializable {
         //this depends on PbxConfigurationHacks
         s += "    buildConfigurationList = \(configurationList.guid) /* Build configuration list for PBXNativeTarget */;\n"
         s += "    buildPhases = (\n"
-        s += "        3ACD1A7E1C4ADB0A001919F6 /* Sources */,\n"
-        s += "        3ACD1A7F1C4ADB0A001919F6 /* Frameworks */,\n"
-        s += "        3ACD1A801C4ADB0A001919F6 /* CopyFiles */,\n"
+        s += "        \(phases.sourcesGUID) /* Sources */,\n"
+        s += "        \(phases.frameworksGUID) /* Frameworks */,\n"
+        s += "        \(phases.copyFilesGUID) /* CopyFiles */,\n"
         s += "    );\n"
         s += "    buildRules = (\n"
         s += "    );\n"
@@ -286,6 +288,8 @@ struct PbxNativeTarget: PbxprojSerializable {
         s += "/* End PBXNativeTarget section */\n"
 
         s += phases.serialize()
+
+        s += configurationList.serialize()
         return s
     }
 }

@@ -90,15 +90,13 @@ func process(task: Task, package: Package) -> [PbxprojSerializable] {
             linkWith.append(".atllbuild/products/"+str)
         }
     }
-
-    let hacks = PbxConfigurationHacks()
     let product = PbxProductReference(name: taskname)
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
     let linkRefs = linkWith.map() {PbxStaticLibraryFileReference(path:$0)}
 
     let groups = PbxGroups(productReference: product, sourceFiles: sourceRefs, linkFiles: linkRefs)
     let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkRefs)
-    let otmp: [PbxprojSerializable] = [hacks, groups, target, product]
+    let otmp: [PbxprojSerializable] = [groups, target, product]
     objects.appendContentsOf(otmp)
     for sourceRef in sourceRefs {
         objects.append(sourceRef)
