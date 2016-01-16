@@ -63,7 +63,7 @@ func emit(task: Task) {
     if let l = task["linkWithProduct"]?.vector {
         for item in l {
             guard let str = item.string else { fatalError("Not string link target \(item)")}
-            linkWith.append(str)
+            linkWith.append(".atllbuild/products/"+str)
         }
     }
 
