@@ -39,7 +39,7 @@ struct Pbxproj: PbxprojSerializable {
             s += obj.serialize()
         }
         s += "};\n"
-        s += "rootObject = \(rootObjectGUID)\n"
+        s += "rootObject = \(rootObjectGUID);\n"
         s += "}\n"
         return s
     }
@@ -206,7 +206,7 @@ struct PbxConfigurationHacks : PbxprojSerializable {
 }
 
 struct PbxGroups : PbxprojSerializable {
-    let productReference: PbxFileReference
+    let productReference: PbxProductReference
     func serialize() -> String {
         var s = ""
         s += "/* Begin PBXGroup section */\n"
@@ -221,8 +221,7 @@ struct PbxGroups : PbxprojSerializable {
         s += "    3ACD1A831C4ADB0A001919F6 /* Products */ = {\n"
         s += "        isa = PBXGroup;\n"
         s += "        children = (\n"
-        //todo: guid
-        //s += "            3ACD1A821C4ADB0A001919F6 /* \(productReference.name) */,\n"
+        s += "            \(productReference.guid) /* \(productReference.name) */,\n"
         s += "        );\n"
         s += "        name = Products;\n"
         s += "        sourceTree = \"<group>\";\n"
@@ -239,6 +238,44 @@ struct PbxGroups : PbxprojSerializable {
         s += "    };\n"
         s += "/* End PBXGroup section */\n"
         return s
+    }
+}
+
+struct PbxNativeTarget: PbxprojSerializable {
+    let guid = xcodeguid()
+    let productReference: PbxProductReference
+    func serialize() -> String {
+        var s = ""
+        s += "/* Begin PBXNativeTarget section */\n"
+        s += "\(guid) /*  */ = {\n"
+        s += "    isa = PBXNativeTarget;\n"
+        //this depends on PbxConfigurationHacks
+        s += "    buildConfigurationList = 3ACD1A891C4ADB0A001919F6 /* Build configuration list for PBXNativeTarget */;\n"
+        s += "    buildPhases = (\n"
+        //todo
+        //s += "        3ACD1A7E1C4ADB0A001919F6 /* Sources */,\n"
+        //s += "        3ACD1A7F1C4ADB0A001919F6 /* Frameworks */,\n"
+        //s += "        3ACD1A801C4ADB0A001919F6 /* CopyFiles */,\n"
+        s += "    );\n"
+        s += "    buildRules = (\n"
+        s += "    );\n"
+        s += "    dependencies = (\n"
+        s += "    );\n"
+        s += "    name = SampleCLIApp;\n"
+        s += "    productName = SampleCLIApp;\n"
+        s += "    productReference = \(productReference.guid) /* \(productReference.name) */;\n"
+        s += "    productType = \"com.apple.product-type.tool\";\n"
+        s += "};\n"
+        s += "/* End PBXNativeTarget section */\n"
+        return s
+    }
+}
+
+struct PbxProductReference: PbxprojSerializable {
+    let name: String
+    let guid = xcodeguid()
+    func serialize() -> String {
+        return "\(guid) /* \(name) */ = {isa = PBXFileReference; explicitFileType = \"compiled.mach-o.executable\"; includeInIndex = 0; path = \(name); sourceTree = BUILT_PRODUCTS_DIR; };\n"
     }
 }
 

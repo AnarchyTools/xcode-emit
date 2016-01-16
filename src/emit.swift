@@ -67,8 +67,9 @@ func emit(task: Task) {
 func pbxproj(sources sources: [String], outputType: OutputType, name: String) -> String {
     let project = Pbxproject()
     let hacks = PbxConfigurationHacks()
-    let product = PbxFileReference(name: name)
+    let product = PbxProductReference(name: name)
     let groups = PbxGroups(productReference: product)
-    var p = Pbxproj(objects: [project, hacks, groups], rootObjectGUID: project.guid)
+    let target = PbxNativeTarget(productReference: product)
+    var p = Pbxproj(objects: [project, hacks, groups, target, product], rootObjectGUID: project.guid)
     return p.serialize()
 }
