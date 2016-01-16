@@ -58,24 +58,37 @@ func emit(task: Task) {
 
     //emit the pbxproj
     if task["outputType"]?.string != "executable" { fatalError("Non-executable type \(task["outputType"]) unsupported.  Please file a bug.")}
-    let str = pbxproj(sources: sources, outputType: OutputType.Executable, name: taskname)
+    
+    var linkWith : [String] = []
+    if let l = task["linkWithProduct"]?.vector {
+        for item in l {
+            guard let str = item.string else { fatalError("Not string link target \(item)")}
+            linkWith.append(str)
+        }
+    }
+
+    let str = pbxproj(sources: sources, linkWith: linkWith, outputType: OutputType.Executable, name: taskname)
     try! str.writeToFile("\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
 
 
 }
 
-func pbxproj(sources sources: [String], outputType: OutputType, name: String) -> String {
+func pbxproj(sources sources: [String], linkWith: [String], outputType: OutputType, name: String) -> String {
     let hacks = PbxConfigurationHacks()
     let product = PbxProductReference(name: name)
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
-    let groups = PbxGroups(productReference: product, sourceFiles: sourceRefs)
+    let linkRefs = linkWith.map() {PbxStaticLibraryFileReference(path:$0)}
+
+    let groups = PbxGroups(productReference: product, sourceFiles: sourceRefs, linkFiles: linkRefs)
     let target = PbxNativeTarget(productReference: product)
-    let phases = PbxPhases(sourceFiles: sourceRefs)
+    let phases = PbxPhases(sourceFiles: sourceRefs, linkFiles: linkRefs)
     let project = Pbxproject(targets: [target])
     var objects : [PbxprojSerializable] = [project, hacks, groups, target, product, phases]
-
     for sourceRef in sourceRefs {
         objects.append(sourceRef)
+    }
+    for linkRef in linkRefs {
+        objects.append(linkRef)
     }
     var p = Pbxproj(objects: objects, rootObjectGUID: project.guid)
     return p.serialize()
