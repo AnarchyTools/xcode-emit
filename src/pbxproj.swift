@@ -243,7 +243,7 @@ struct PbxGroups : PbxprojSerializable {
         //s += "            3ACD1A851C4ADB0A001919F6 /* main.swift */,\n"
         //s += "            3ACD1A8C1C4ADB3D001919F6 /* atpkg.a */,\n"
         s += "        );\n"
-        s += "        path = \(productReference.name);\n"
+        s += "        path = \".\";\n"
         s += "        sourceTree = \"<group>\";\n"
         s += "    };\n"
         s += "/* End PBXGroup section */\n"
