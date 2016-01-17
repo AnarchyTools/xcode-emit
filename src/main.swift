@@ -26,10 +26,11 @@ func usage() {
 
 guard let package = Package(filepath:"build.atpkg") else { fatalError("Can't load build.atpkg")}
 
-print("ended successfully.")
-
-
 if Process.arguments.count <= 1 {
+    usage()
+    exit(1)
+}
+if Process.arguments[1] == "--help" {
     usage()
     exit(1)
 }
