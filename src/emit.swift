@@ -58,15 +58,14 @@ func emit(task: Task, package: Package) {
     try! str.writeToFile("\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
 }
 
-func process(task: Task, package: Package) -> [PbxprojSerializable] {
+func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
+    let task = tasks[0] //pull off head
     //are there dependencies?
     var objects: [PbxprojSerializable] = []
-    if let dependencies = task["dependencies"]?.vector {
-        for dependency in dependencies {
-            guard let depname = dependency.string else { fatalError("Non-string dependency \(dependency)")}
-            guard let dep = package.tasks[depname] else { fatalError("Can't find dependency \(depname)")}
-            objects.appendContentsOf(process(dep, package: package))
-        }
+    
+    if tasks.count > 1 {
+        let nextTasks = Array(tasks[1..<tasks.count])
+        objects.appendContentsOf(process(nextTasks, package: package))
     }
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     guard let sourceDescriptions = task["source"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
@@ -125,7 +124,7 @@ func process(task: Task, package: Package) -> [PbxprojSerializable] {
 
 func pbxproj(task: Task, package: Package) -> String {
     var targets : [PbxNativeTarget] = []
-    var objects = process(task, package: package)
+    var objects = process(package.prunedDependencyGraph(task).reverse(), package: package)
     for object in objects {
         if object.dynamicType == PbxNativeTarget.self {
             targets.append(object as! PbxNativeTarget)
