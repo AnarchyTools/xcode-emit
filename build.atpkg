@@ -16,6 +16,7 @@
 
 (package
   :name "xcode-emit"
+  :import ["atpkg/build.atpkg"]
   
   :tasks {
           :xcodeemit {
@@ -23,7 +24,7 @@
             :source ["src/**.swift"]
             :name "xcode_emit"
             :outputType "executable"
-            :dependencies ["atpkg"]
+            :dependencies ["atpkg.atpkg"]
             :linkWithProduct ["atpkg.a"]
           }
 
@@ -31,13 +32,6 @@
             :tool "shell"
             :dependencies ["xcodeemit"]
             :script "mv .atllbuild/products/xcode_emit .atllbuild/products/xcode-emit"
-          }
-
-          :atpkg {
-            :tool "atllbuild"
-            :source ["atpkg/src/**.swift"]
-            :name "atpkg"
-            :outputType "static-library"
           }
 
           :test {
