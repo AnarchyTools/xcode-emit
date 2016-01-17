@@ -40,10 +40,11 @@
             :outputType "static-library"
           }
 
-          :run {
+          :test {
             :tool "shell"
             :script ".atllbuild/products/xcode-emit xcodeemit"
             :dependencies ["default"]
           }
+
   }
 )
