@@ -93,12 +93,22 @@ func process(task: Task, package: Package) -> [PbxprojSerializable] {
                 precondition(str.hasSuffix(".a")) //not sure what to do in this case
                 if file.name + ".a" == str {
                     linkWith.append(file)
+                    //because we use dynamic libraries (due to rdar://24221024)
+                    //we have to link with all our dependencies' linkWith as well
+                    for o in objects {
+                        //find the target for the file we're linking
+                        guard let target = o as? PbxNativeTarget else { continue }
+                        if target.productReference.name != file.name { continue }
+                        //append its dependencies
+                        linkWith.appendContentsOf(target.linkFiles)
+                    }
                     break
                 }
                 else { print("didn't match \(file.name) \(str)") }
             }
         }
     }
+
     let product = PbxProductReference(name: taskname)
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
 
