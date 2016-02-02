@@ -16,16 +16,16 @@
 
 (package
   :name "xcode-emit"
-  :import ["atpkg/build.atpkg"]
+  :import-packages ["atpkg/build.atpkg"]
   
   :tasks {
           :xcodeemit {
             :tool "atllbuild"
-            :source ["src/**.swift"]
+            :sources ["src/**.swift"]
             :name "xcode_emit"
-            :outputType "executable"
+            :output-type "executable"
             :dependencies ["atpkg.atpkg"]
-            :linkWithProduct ["atpkg.a"]
+            :link-with ["atpkg.a"]
           }
 
           :default {
@@ -34,7 +34,7 @@
             :script "mv .atllbuild/products/xcode_emit .atllbuild/products/xcode-emit"
           }
 
-          :test {
+          :check {
             :tool "shell"
             :script ".atllbuild/products/xcode-emit xcodeemit"
             :dependencies ["default"]

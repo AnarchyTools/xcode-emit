@@ -24,7 +24,7 @@ func usage() {
     print("Usage: xcode-emit [task]")
 }
 
-guard let package = Package(filepath:"build.atpkg") else { fatalError("Can't load build.atpkg")}
+guard let package = Package(filepath:"build.atpkg", overlay: []) else { fatalError("Can't load build.atpkg")}
 
 if Process.arguments.count <= 1 {
     usage()

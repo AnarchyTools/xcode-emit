@@ -42,22 +42,22 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
         objects.appendContentsOf(process(nextTasks, package: package))
     }
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
-    guard let sourceDescriptions = task["source"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
-    let sources = collectSources(sourceDescriptions, task: task)
+    guard let sourceDescriptions = task["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
+    let sources = collectSources(sourceDescriptions, taskForCalculatingPath: task)
     //emit the pbxproj
     let outputType : OutputType
-    if task["outputType"]?.string == "executable" {
+    if task["output-type"]?.string == "executable" {
         outputType = .Executable
     }
-    else if task["outputType"]?.string == "static-library" {
+    else if task["output-type"]?.string == "static-library" {
         outputType = .StaticLibrary
     }
     else {
-        fatalError("Unsupported output type \(task["outputType"])")
+        fatalError("Unsupported output type \(task["output-type"])")
     }
     
     var linkWith : [PbxProductReference] = []
-    if let l = task["linkWithProduct"]?.vector {
+    if let l = task["link-with"]?.vector {
         for item in l {
             guard let str = item.string else { fatalError("Not string link target \(item)")}
             //find the productRef to link to
