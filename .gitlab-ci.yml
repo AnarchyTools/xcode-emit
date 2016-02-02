@@ -7,7 +7,7 @@ before_script:
 osx:
     stage: build
     script: 
-        - atbuild test
+        - atbuild check
     tags:
         - openswift
         - atbuild
