@@ -13,6 +13,10 @@
 // limitations under the License.
 import Foundation
 
+var iosPlatform = false
+
+
+
 private func xcodeguid() -> String {
     let choices = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"]
     var guid = ""
@@ -153,7 +157,13 @@ struct PbxConfigurationHacks : PbxprojSerializable {
         s += "        MACOSX_DEPLOYMENT_TARGET = 10.11;\n"
         s += "        MTL_ENABLE_DEBUG_INFO = YES;\n"
         s += "        ONLY_ACTIVE_ARCH = YES;\n"
-        s += "        SDKROOT = macosx;\n"
+        if iosPlatform {
+            s += "        SDKROOT = iphoneos;\n"
+            s += "        \"CODE_SIGN_IDENTITY[sdk=iphoneos*]\" = \"iPhone Developer\";\n"
+        }
+        else {
+            s += "        SDKROOT = macosx;\n"
+        }
         s += "        SWIFT_OPTIMIZATION_LEVEL = \"-Onone\";\n"
         s += "    };\n"
         s += "    name = Debug;\n"
@@ -190,7 +200,13 @@ struct PbxConfigurationHacks : PbxprojSerializable {
         s += "        GCC_WARN_UNUSED_VARIABLE = YES;\n"
         s += "        MACOSX_DEPLOYMENT_TARGET = 10.11;\n"
         s += "        MTL_ENABLE_DEBUG_INFO = NO;\n"
-        s += "        SDKROOT = macosx;\n"
+        if iosPlatform {
+            s += "        SDKROOT = iphoneos;\n"
+            s += "        \"CODE_SIGN_IDENTITY[sdk=iphoneos*]\" = \"iPhone Developer\";\n"
+        }
+        else {
+            s += "        SDKROOT = macosx;\n"
+        }
         s += "    };\n"
         s += "    name = Release;\n"
         s += "};\n"
@@ -241,6 +257,9 @@ struct PbxGroups : PbxprojSerializable {
             for file in target.target.sourceFiles {
                 s += "            \(file.guid) /* \(file.path) */,\n"
             }
+            for file in target.target.otherFiles {
+                s += "            \(file.guid) /* \(file.path) */,\n"
+            }
             s += "        );\n"
             s += "        path = \".\";\n"
             s += "        name = \"\(target.target.name)\";\n"
@@ -259,7 +278,10 @@ struct PbxNativeTarget: PbxprojSerializable {
     let outputType: OutputType 
     let sourceFiles: [PbxSourceFileReference]
     let linkFiles: [PbxProductReference]
-    let configurationList = PbxTargetConfigurations()
+    let configurationList: PbxTargetConfigurations
+
+    //todo: This should be a more generic type than plists
+    let otherFiles: [PbxPlistFileReference]
 
     let phases: PbxPhases
 
@@ -269,6 +291,44 @@ struct PbxNativeTarget: PbxprojSerializable {
         self.phases = PbxPhases(sourceFiles: sourceFiles, linkFiles: linkFiles)
         self.sourceFiles = sourceFiles
         self.linkFiles = linkFiles
+
+        if outputType == OutputType.Application {
+            var s = ""
+            s += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            s += "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+            s += "<plist version=\"1.0\">\n"
+            s += "<dict>\n"
+            s += "  <key>CFBundleDevelopmentRegion</key>\n"
+            s += "  <string>en</string>\n"
+            s += "  <key>CFBundleExecutable</key>\n"
+            s += "  <string>$(EXECUTABLE_NAME)</string>\n"
+            s += "  <key>CFBundleIdentifier</key>\n"
+            s += "  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>\n"
+            s += "  <key>CFBundleInfoDictionaryVersion</key>\n"
+            s += "  <string>6.0</string>\n"
+            s += "  <key>CFBundleName</key>\n"
+            s += "  <string>$(PRODUCT_NAME)</string>\n"
+            s += "  <key>CFBundlePackageType</key>\n"
+            s += "  <string>APPL</string>\n"
+            s += "  <key>CFBundleShortVersionString</key>\n"
+            s += "  <string>1.0</string>\n"
+            s += "  <key>CFBundleSignature</key>\n"
+            s += "  <string>????</string>\n"
+            s += "  <key>CFBundleVersion</key>\n"
+            s += "  <string>1</string>\n"
+            s += "  <key>LSRequiresIPhoneOS</key>\n"
+            s += "  <true/>\n"
+            s += "</dict>\n"
+            s += "</plist>\n"
+            let plistName = "\(productReference.name)-xcode-emit-Info.plist"
+            try! s.write(toFile: plistName, atomically: false, encoding: NSUTF8StringEncoding)
+            self.otherFiles = [PbxPlistFileReference(path: plistName)]
+            self.configurationList = PbxTargetConfigurations(plistPath: plistName)
+        }
+        else {
+            self.configurationList = PbxTargetConfigurations(plistPath: nil)
+            self.otherFiles = []
+        }
     }
     func serialize() -> String {
         var s = ""
@@ -295,6 +355,8 @@ struct PbxNativeTarget: PbxprojSerializable {
         case .StaticLibrary:
             print("Warning: working around rdar://24221024")
             s += "    productType = \"com.apple.product-type.library.dynamic\";"
+        case .Application:
+            s += "    productType = \"com.apple.product-type.application\";\n"
         }
         s += "};\n"
         s += "/* End PBXNativeTarget section */\n"
@@ -310,7 +372,23 @@ struct PbxTargetConfigurations: PbxprojSerializable {
     let guid = xcodeguid()
     let debugGUID = xcodeguid()
     let releaseGUID = xcodeguid()
+    let plistPath: String?
+
     func serialize() -> String {
+
+        //these settings are used several times
+        var sx = ""
+        sx += "        PRODUCT_NAME = \"$(TARGET_NAME)\";\n"
+        //particularly when building a dynamic library, we need to tell Swift where to find its standard library
+        //@executable_path/Frameworks is for iOS/app bundles
+        sx += "        LD_RUNPATH_SEARCH_PATHS = \"$(inherited) @executable_path/Frameworks /Library/Developer/Toolchains/swift-latest.xctoolchain/usr/lib/swift/macosx/\";\n"
+        //once we give it its standard library dynamically, let's force the executable not to include it.
+        sx += "        SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;\n"
+        if let plistPath = self.plistPath {
+            sx += "        INFOPLIST_FILE = \(plistPath);\n"
+        }
+        sx += "        PRODUCT_BUNDLE_IDENTIFIER = org.anarchytools.XcodeEmittedApp;\n"
+
         var s = ""
         s += "\(guid) /* Build configuration list for PBXNativeTarget */ = {\n"
         s += "    isa = XCConfigurationList;\n"
@@ -323,20 +401,14 @@ struct PbxTargetConfigurations: PbxprojSerializable {
         s += "\(debugGUID) /* Debug */ = {\n"
         s += "    isa = XCBuildConfiguration;\n"
         s += "    buildSettings = {\n"
-        s += "        PRODUCT_NAME = \"$(TARGET_NAME)\";\n"
-        //particularly when building a dynamic library, we need to tell Swift where to find its standard library
-        s += "        LD_RUNPATH_SEARCH_PATHS = \"/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/lib/swift/macosx/\";\n"
-        //once we give it its standard library dynamically, let's force the executable not to include it.
-        s += "        SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;\n"
+        s += sx
         s += "    };\n"
         s += "    name = Debug;\n"
         s += "};\n"
         s += "\(releaseGUID) /* Release */ = {\n"
         s += "    isa = XCBuildConfiguration;\n"
         s += "    buildSettings = {\n"
-        s += "        PRODUCT_NAME = \"$(TARGET_NAME)\";\n"
-        //todo: do we need this?
-        //s += "        SWIFT_INCLUDE_PATHS = .atllbuild/products/;\n"
+        s += sx
         s += "    };\n"
         s += "    name = Release;\n"
         s += "};\n"
@@ -393,15 +465,33 @@ struct PbxPhases: PbxprojSerializable {
 }
 
 struct PbxProductReference: PbxprojSerializable {
+
+    enum ReferenceType: String {
+        case Executable = "compiled.mach-o.executable"
+        case Application = "wrapper.application"
+    }
+
     let name: String
     let guid = xcodeguid()
     let buildFile: PbxBuildFile
-    init(name: String) {
+    let type: ReferenceType
+
+    private var path: String {
+        switch(type){
+            case .Executable:
+            return name
+            case .Application:
+            return "\(name).app"
+        }
+    }
+
+    init(name: String, type: ReferenceType) {
         self.name = name
         self.buildFile = PbxBuildFile(path: name, fileRefGUID: guid)
+        self.type = type
     }
     func serialize() -> String {
-        var s =  "\(guid) /* \(name) */ = {isa = PBXFileReference; explicitFileType = \"compiled.mach-o.executable\"; includeInIndex = 0; path = \(name); sourceTree = BUILT_PRODUCTS_DIR; };\n"
+        var s =  "\(guid) /* \(name) */ = {isa = PBXFileReference; explicitFileType = \"\(self.type.rawValue)\"; includeInIndex = 0; path = \(path); sourceTree = BUILT_PRODUCTS_DIR; };\n"
         s += buildFile.serialize()
         return s
     }
@@ -427,6 +517,18 @@ struct PbxStaticLibraryFileReference: PbxprojSerializable {
     func serialize() -> String {
         var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = \(path); path = \(path); sourceTree = \"<group>\"; };"
         s += buildFile.serialize()
+        return s
+    }
+}
+
+struct PbxPlistFileReference: PbxprojSerializable {
+    let path: String
+    let guid = xcodeguid()
+    init(path: String) {
+        self.path = path
+    }
+    func serialize() -> String {
+        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \(path); path = \(path); sourceTree = \"<group>\"; };"
         return s
     }
 }

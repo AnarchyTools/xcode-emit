@@ -33,6 +33,11 @@ if Process.arguments[1] == "--help" {
     usage()
     exit(1)
 }
+for (x,arg) in Process.arguments.enumerated() {
+    if arg == "--platform" && Process.arguments[x+1] == "ios" {
+        iosPlatform = true
+    }
+}
 
 let taskName = Process.arguments[1]
 

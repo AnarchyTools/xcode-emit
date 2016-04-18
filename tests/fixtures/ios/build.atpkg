@@ -15,36 +15,14 @@
 ;; The build file for all of the targets of the Anarchy Tools build tool.
 
 (package
-  :name "xcode-emit"
-  :import-packages ["atpkg/build.atpkg"]
+  :name "ios"
   
   :tasks {
-          :xcodeemit {
+          :ios {
             :tool "atllbuild"
             :sources ["src/**.swift"]
-            :name "xcode_emit"
+            :name "main"
             :output-type "executable"
-            :dependencies ["atpkg.atpkg"]
-            :link-with ["atpkg.a"]
           }
-
-          :default {
-            :tool "shell"
-            :dependencies ["xcodeemit"]
-            :script "mv .atllbuild/products/xcode_emit .atllbuild/products/xcode-emit"
-          }
-
-          :ioscheck {
-            :tool "shell"
-            :dependencies ["xcodeemit"]
-            :script "cd tests/fixtures/ios && ../../../.atllbuild/products/xcode-emit ios --platform ios"
-          }
-
-          :check {
-            :tool "shell"
-            :script ".atllbuild/products/xcode-emit xcodeemit"
-            :dependencies ["default" "ioscheck"]
-          }
-
   }
 )

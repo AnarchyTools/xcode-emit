@@ -17,6 +17,7 @@ import Foundation
 enum OutputType {
     case Executable
     case StaticLibrary
+    case Application
 }
 
 import atpkg
@@ -47,7 +48,10 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
     //emit the pbxproj
     let outputType : OutputType
     if task["output-type"]?.string == "executable" {
-        outputType = .Executable
+        if iosPlatform {
+            outputType = .Application
+        }
+        else { outputType = .Executable }
     }
     else if task["output-type"]?.string == "static-library" {
         outputType = .StaticLibrary
@@ -81,8 +85,14 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
             }
         }
     }
-
-    let product = PbxProductReference(name: taskname)
+    let type :PbxProductReference.ReferenceType
+    if iosPlatform {
+        type = PbxProductReference.ReferenceType.Application
+    }
+    else {
+        type = PbxProductReference.ReferenceType.Executable
+    }
+    let product = PbxProductReference(name: taskname, type:type)
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
 
     
@@ -92,6 +102,9 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
     objects.append(product)
     for sourceRef in sourceRefs {
         objects.append(sourceRef)
+    }
+    for file in target.otherFiles {
+        objects.append(file)
     }
     return objects
 }
