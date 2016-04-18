@@ -26,10 +26,10 @@ func emit(task: Task, package: Package) {
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     let xcodeproj = taskname+".xcodeproj"
     let manager = NSFileManager.defaultManager()
-    let _ = try? manager.removeItemAtPath(xcodeproj)
-    try! manager.createDirectoryAtPath(xcodeproj, withIntermediateDirectories: false, attributes: nil)
-    let str = pbxproj(task, package: package)
-    try! str.writeToFile("\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
+    let _ = try? manager.removeItem(atPath: xcodeproj)
+    try! manager.createDirectory(atPath: xcodeproj, withIntermediateDirectories: false, attributes: nil)
+    let str = pbxproj(task: task, package: package)
+    try! str.write(toFile: "\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
 }
 
 func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
@@ -39,11 +39,11 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
     
     if tasks.count > 1 {
         let nextTasks = Array(tasks[1..<tasks.count])
-        objects.appendContentsOf(process(nextTasks, package: package))
+        objects.append(contentsOf: process(tasks: nextTasks, package: package))
     }
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     guard let sourceDescriptions = task["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
-    let sources = collectSources(sourceDescriptions, taskForCalculatingPath: task)
+    let sources = collectSources(sourceDescriptions: sourceDescriptions, taskForCalculatingPath: task)
     //emit the pbxproj
     let outputType : OutputType
     if task["output-type"]?.string == "executable" {
@@ -73,7 +73,7 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
                         guard let target = o as? PbxNativeTarget else { continue }
                         if target.productReference.name != file.name { continue }
                         //append its dependencies
-                        linkWith.appendContentsOf(target.linkFiles)
+                        linkWith.append(contentsOf: target.linkFiles)
                     }
                     break
                 }
@@ -98,7 +98,7 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
 
 func pbxproj(task: Task, package: Package) -> String {
     var targets : [PbxNativeTarget] = []
-    var objects = process(package.prunedDependencyGraph(task).reverse(), package: package)
+    var objects = process(tasks: package.prunedDependencyGraph(task: task).reversed(), package: package)
     for object in objects {
         if object.dynamicType == PbxNativeTarget.self {
             targets.append(object as! PbxNativeTarget)

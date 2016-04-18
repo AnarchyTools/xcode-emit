@@ -24,7 +24,6 @@ func usage() {
     print("Usage: xcode-emit [task]")
 }
 
-guard let package = Package(filepath:"build.atpkg", overlay: []) else { fatalError("Can't load build.atpkg")}
 
 if Process.arguments.count <= 1 {
     usage()
@@ -36,5 +35,9 @@ if Process.arguments[1] == "--help" {
 }
 
 let taskName = Process.arguments[1]
+
+let package = try! Package(filepath:"build.atpkg", overlay: [], focusOnTask:taskName)
+
+
 guard let task = package.tasks[taskName] else { fatalError("Can't find task named \(taskName)")}
-emit(task, package: package)
+emit(task: task, package: package)
