@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import Foundation
-
 var iosPlatform = false
+import Darwin
+import atfoundation
 
 
 
@@ -321,7 +321,7 @@ struct PbxNativeTarget: PbxprojSerializable {
             s += "</dict>\n"
             s += "</plist>\n"
             let plistName = "\(productReference.name)-xcode-emit-Info.plist"
-            try! s.write(toFile: plistName, atomically: false, encoding: NSUTF8StringEncoding)
+            try! s.write(to: Path(plistName))
             self.otherFiles = [PbxPlistFileReference(path: plistName)]
             self.configurationList = PbxTargetConfigurations(plistPath: plistName)
         }

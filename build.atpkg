@@ -24,8 +24,10 @@
             :sources ["src/**.swift"]
             :name "xcode_emit"
             :output-type "executable"
-            :dependencies ["atpkg.atpkg"]
-            :link-with ["atpkg.a"]
+            :dependencies ["atpkg.atpkg" "atfoundation.atfoundation"]
+            :link-with ["atpkg.a" "atfoundation.a"]
+            :link-options ["-static-stdlib"]
+            :publish-product true
           }
 
           :default {

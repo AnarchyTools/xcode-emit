@@ -14,8 +14,10 @@
 
 let version = "0.3.0-dev"
 
-import Foundation
+import atfoundation
 import atpkg
+
+setbuf(stdout, nil)
 
 func usage() {
     print("xcode-emit \(version)")
@@ -41,7 +43,7 @@ for (x,arg) in Process.arguments.enumerated() {
 
 let taskName = Process.arguments[1]
 
-let package = try! Package(filepath:"build.atpkg", overlay: [], focusOnTask:taskName)
+let package = try! Package(filepath:Path("build.atpkg"), overlay: [], focusOnTask:taskName)
 
 
 guard let task = package.tasks[taskName] else { fatalError("Can't find task named \(taskName)")}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+import atfoundation
 
 enum OutputType {
     case Executable
@@ -25,12 +25,11 @@ func emit(task: Task, package: Package) {
     precondition(task.tool == "atllbuild", "Unsupported tool \(task.tool)")
     //make the xcodeproj directory
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
-    let xcodeproj = taskname+".xcodeproj"
-    let manager = NSFileManager.defaultManager()
-    let _ = try? manager.removeItem(atPath: xcodeproj)
-    try! manager.createDirectory(atPath: xcodeproj, withIntermediateDirectories: false, attributes: nil)
+    let xcodeproj = Path(taskname+".xcodeproj")
+    let _ = try? FS.removeItem(path: xcodeproj, recursive: true)
+    try! FS.createDirectory(path: xcodeproj)
     let str = pbxproj(task: task, package: package)
-    try! str.write(toFile: "\(xcodeproj)/project.pbxproj", atomically: false, encoding: NSUTF8StringEncoding)
+    try! str.write(to: Path("\(xcodeproj)/project.pbxproj"))
 }
 
 func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
@@ -93,7 +92,7 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
         type = PbxProductReference.ReferenceType.Executable
     }
     let product = PbxProductReference(name: taskname, type:type)
-    let sourceRefs = sources.map() {PbxSourceFileReference(path:$0)}
+    let sourceRefs = sources.map() {PbxSourceFileReference(path:$0.description)}
 
     
 
