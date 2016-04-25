@@ -9,7 +9,7 @@ osx:
     script: 
         - atbuild check
         - mkdir xcode-emit-${CI_BUILD_REF}
-        - cp bin/xcode-emit xcode-emit-${CI_BUILD_REF}
+        - cp bin/xcode_emit xcode-emit-${CI_BUILD_REF}/xcode-emit
         - tar cJf xcode-emit-${CI_BUILD_REF}-osx.tar.xz xcode-emit-${CI_BUILD_REF}
     tags:
         - openswift
