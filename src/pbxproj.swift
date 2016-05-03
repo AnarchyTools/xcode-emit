@@ -17,7 +17,7 @@ import atfoundation
 
 
 
-private func xcodeguid() -> String {
+func xcodeguid() -> String {
     let choices = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"]
     var guid = ""
     for _ in 0..<24 {
@@ -52,7 +52,7 @@ struct Pbxproj: PbxprojSerializable {
 
 
 struct Pbxproject: PbxprojSerializable {
-    let guid = xcodeguid()
+    let guid : String
     var targets: [PbxNativeTarget]
     let hacks = PbxConfigurationHacks()
 
@@ -288,6 +288,8 @@ struct PbxNativeTarget: PbxprojSerializable {
     let linkFiles: [PbxProductReference]
     let configurationList: PbxTargetConfigurations
 
+    let dependencies: [PbxTargetDependency]
+
     let appTarget: TargetWrapper?
 
     //todo: This should be a more generic type than plists
@@ -295,7 +297,7 @@ struct PbxNativeTarget: PbxprojSerializable {
 
     let phases: PbxPhases
 
-    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference], appTarget: PbxNativeTarget?) {
+    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference], appTarget: PbxNativeTarget?, xcodeprojGUID: String) {
         if let a = appTarget {
             self.appTarget = TargetWrapper(target: a)
         }
@@ -338,6 +340,7 @@ struct PbxNativeTarget: PbxprojSerializable {
             try! s.write(to: Path(plistName))
             self.otherFiles = [PbxPlistFileReference(path: plistName)]
             self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: nil)
+            self.dependencies = []
             case .TestTarget:
             var s = ""
             s += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -370,10 +373,12 @@ struct PbxNativeTarget: PbxprojSerializable {
             try! s.write(to: Path(plistName))
             self.otherFiles = [PbxPlistFileReference(path: plistName)]
             self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: appTarget!.name)
+            self.dependencies = [PbxTargetDependency(target: appTarget!, projectGUID: xcodeprojGUID)]
 
             case .StaticLibrary, .Executable:
             self.configurationList = PbxTargetConfigurations(plistPath: nil, testThisApp: nil)
             self.otherFiles = []
+            self.dependencies = []
         }
     }
     func serialize() -> String {
@@ -391,6 +396,9 @@ struct PbxNativeTarget: PbxprojSerializable {
         s += "    buildRules = (\n"
         s += "    );\n"
         s += "    dependencies = (\n"
+        for dependency in dependencies {
+            s += "        \(dependency.guid) /* PBXTargetDependency */,\n"
+        }
         s += "    );\n"
         s += "    name = \(name);\n"
         s += "    productName = \(name);\n"
@@ -412,6 +420,10 @@ struct PbxNativeTarget: PbxprojSerializable {
         s += phases.serialize()
 
         s += configurationList.serialize()
+
+        for dependency in dependencies {
+            s += dependency.serialize()
+        }
         return s
     }
 }
@@ -588,6 +600,31 @@ struct PbxPlistFileReference: PbxprojSerializable {
     }
     func serialize() -> String {
         var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \(path); path = \(path); sourceTree = \"<group>\"; };"
+        return s
+    }
+}
+
+struct PbxTargetDependency : PbxprojSerializable {
+    let guid = xcodeguid()
+    let target : PbxNativeTarget
+
+    let targetProxyGUID = xcodeguid()
+    let projectGUID: String
+
+    func serialize() -> String {
+        var s = ""
+        s += "\(guid) /* PBXTargetDependency */ = {\n"
+        s += "    isa = PBXTargetDependency;\n"
+        s += "    target = \(target.guid) /* main */;\n"
+        s += "    targetProxy = \(targetProxyGUID) /* PBXContainerItemProxy */;\n"
+        s += "};\n"
+        s += "    \(targetProxyGUID) /* PBXContainerItemProxy */ = {\n"
+        s += "     isa = PBXContainerItemProxy;\n"
+        s += "    containerPortal = \(projectGUID) /* Project object */;\n"
+        s += "    proxyType = 1;\n"
+        s += "    remoteGlobalIDString = \(target.guid);\n"
+        s += "    remoteInfo = \(target.name);\n"
+        s += "};\n"
         return s
     }
 }

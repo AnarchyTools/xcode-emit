@@ -39,14 +39,14 @@ func emit(task: Task, testTask: Task?, package: Package) {
 
 }
 
-func process(tasks: [Task], testTask: Task?, package: Package) -> [PbxprojSerializable] {
+func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: String) -> [PbxprojSerializable] {
     let task = tasks[0] //pull off head
     //are there dependencies?
     var objects: [PbxprojSerializable] = []
     
     if tasks.count > 1 {
         let nextTasks = Array(tasks[1..<tasks.count])
-        objects.append(contentsOf: process(tasks: nextTasks, testTask: nil, package: package))
+        objects.append(contentsOf: process(tasks: nextTasks, testTask: nil, package: package, xcodeprojGUID: xcodeprojGUID))
     }
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     guard let sourceDescriptions = task["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
@@ -103,7 +103,7 @@ func process(tasks: [Task], testTask: Task?, package: Package) -> [PbxprojSerial
 
     
 
-    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, appTarget: nil)
+    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, appTarget: nil, xcodeprojGUID: xcodeprojGUID )
     objects.append(target)
     objects.append(product)
 
@@ -111,7 +111,7 @@ func process(tasks: [Task], testTask: Task?, package: Package) -> [PbxprojSerial
         guard let testSourceDescriptions = testTask["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
         let sources = collectSources(sourceDescriptions: testSourceDescriptions, taskForCalculatingPath: testTask).map() {PbxSourceFileReference(path: $0.description)}
         let testProduct = PbxProductReference(name: taskname+"Tests", type: .TestTarget)
-        let testTarget = PbxNativeTarget(productReference: testProduct, outputType: .TestTarget, sourceFiles: sources, linkFiles: [], appTarget: target)
+        let testTarget = PbxNativeTarget(productReference: testProduct, outputType: .TestTarget, sourceFiles: sources, linkFiles: [], appTarget: target, xcodeprojGUID: xcodeprojGUID)
         objects.append(testProduct)
         objects.append(testTarget)
         for o in sources {
@@ -130,14 +130,15 @@ func process(tasks: [Task], testTask: Task?, package: Package) -> [PbxprojSerial
 }
 
 func pbxproj(task: Task, testTask: Task?, package: Package) -> Pbxproj {
+    let guid = xcodeguid()
     var targets : [PbxNativeTarget] = []
-    var objects = process(tasks: package.prunedDependencyGraph(task: task).reversed(), testTask: testTask, package: package)
+    var objects = process(tasks: package.prunedDependencyGraph(task: task).reversed(), testTask: testTask, package: package, xcodeprojGUID: guid)
     for object in objects {
         if object.dynamicType == PbxNativeTarget.self {
             targets.append(object as! PbxNativeTarget)
         }
     }
-    let project = Pbxproject(targets: targets)
+    let project = Pbxproject( guid: guid, targets: targets)
     objects.append(project)
     let groups = PbxGroups(targets: targets)
     objects.append(groups)
