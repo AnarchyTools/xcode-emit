@@ -39,8 +39,9 @@
           :ioscheck {
             :tool "shell"
             :dependencies ["xcodeemit"]
-            :script "cd tests/fixtures/ios && ../../../.atllbuild/products/xcode-emit ios --platform ios"
+            :script "cd tests/fixtures/ios && ../../../.atllbuild/products/xcode-emit ios --platform ios --test-task ios-tests && xcodebuild -scheme main -destination 'platform=iOS Simulator,name=iPhone 6' test"
           }
+
 
           :check {
             :tool "shell"

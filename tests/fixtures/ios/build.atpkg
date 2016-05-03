@@ -24,5 +24,12 @@
             :name "main"
             :output-type "executable"
           }
+
+          :ios-tests {
+            :tool "atllbuild"
+            :sources ["tests/**.swift"]
+            :name "main"
+            :output-type "executable"
+          }
   }
 )

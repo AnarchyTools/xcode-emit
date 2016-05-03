@@ -35,16 +35,28 @@ if Process.arguments[1] == "--help" {
     usage()
     exit(1)
 }
+var testTaskName: String? = nil
+
 for (x,arg) in Process.arguments.enumerated() {
     if arg == "--platform" && Process.arguments[x+1] == "ios" {
         iosPlatform = true
+    }
+    if arg == "--test-task" {
+        testTaskName = Process.arguments[x+1]
     }
 }
 
 let taskName = Process.arguments[1]
 
+
 let package = try! Package(filepath:Path("build.atpkg"), overlay: [], focusOnTask:taskName)
 
 
 guard let task = package.tasks[taskName] else { fatalError("Can't find task named \(taskName)")}
-emit(task: task, package: package)
+let testTask: Task?
+if let t = testTaskName {
+    guard let t_ = package.tasks[t] else { fatalError("Can't find task named \(t)")}
+    testTask = t_
+}
+else { testTask = nil }
+emit(task: task, testTask: testTask, package: package)

@@ -1,0 +1,125 @@
+// Copyright (c) 2016 Anarchy Tools Contributors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+func xcscheme(project: Pbxproj) -> String {
+
+    var s = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    for obj in project.objects {
+        if let obj = obj as? PbxNativeTarget {
+            if let appTarget = obj.appTarget?.target {
+                s += "<Scheme\n"
+                s += "   LastUpgradeVersion = \"0730\"\n"
+                s += "   version = \"1.3\">\n"
+                s += "   <BuildAction\n"
+                s += "      parallelizeBuildables = \"YES\"\n"
+                s += "      buildImplicitDependencies = \"YES\">\n"
+                s += "      <BuildActionEntries>\n"
+                s += "         <BuildActionEntry\n"
+                s += "            buildForTesting = \"YES\"\n"
+                s += "            buildForRunning = \"YES\"\n"
+                s += "            buildForProfiling = \"YES\"\n"
+                s += "            buildForArchiving = \"YES\"\n"
+                s += "            buildForAnalyzing = \"YES\">\n"
+                s += "            <BuildableReference\n"
+                s += "               BuildableIdentifier = \"primary\"\n"
+                s += "               BlueprintIdentifier = \"\(appTarget.guid)\"\n"
+                s += "               BuildableName = \"\(appTarget.name).app\"\n"
+                s += "               BlueprintName = \"\(appTarget.name)\"\n"
+                s += "               ReferencedContainer = \"container:\(appTarget.name).xcodeproj\">\n"
+                s += "            </BuildableReference>\n"
+                s += "         </BuildActionEntry>\n"
+                s += "      </BuildActionEntries>\n"
+                s += "   </BuildAction>\n"
+                s += "   <TestAction\n"
+                s += "      buildConfiguration = \"Debug\"\n"
+                s += "      selectedDebuggerIdentifier = \"Xcode.DebuggerFoundation.Debugger.LLDB\"\n"
+                s += "      selectedLauncherIdentifier = \"Xcode.DebuggerFoundation.Launcher.LLDB\"\n"
+                s += "      shouldUseLaunchSchemeArgsEnv = \"YES\">\n"
+                s += "      <Testables>\n"
+                s += "         <TestableReference\n"
+                s += "            skipped = \"NO\">\n"
+                s += "            <BuildableReference\n"
+                s += "               BuildableIdentifier = \"primary\"\n"
+                s += "               BlueprintIdentifier = \"\(obj.guid)\"\n"
+                s += "               BuildableName = \"\(obj.name).xctest\"\n"
+                s += "               BlueprintName = \"\(obj.name)\"\n"
+                s += "               ReferencedContainer = \"container:\(appTarget.name).xcodeproj\">\n"
+                s += "            </BuildableReference>\n"
+                s += "         </TestableReference>\n"
+                s += "      </Testables>\n"
+                s += "      <MacroExpansion>\n"
+                s += "         <BuildableReference\n"
+                s += "            BuildableIdentifier = \"primary\"\n"
+                s += "            BlueprintIdentifier = \"\(appTarget.guid)\"\n"
+                s += "            BuildableName = \"\(appTarget.name).app\"\n"
+                s += "            BlueprintName = \"\(appTarget.name)\"\n"
+                s += "            ReferencedContainer = \"container:\(appTarget.name).xcodeproj\">\n"
+                s += "         </BuildableReference>\n"
+                s += "      </MacroExpansion>\n"
+                s += "      <AdditionalOptions>\n"
+                s += "      </AdditionalOptions>\n"
+                s += "   </TestAction>\n"
+                s += "   <LaunchAction\n"
+                s += "      buildConfiguration = \"Debug\"\n"
+                s += "      selectedDebuggerIdentifier = \"Xcode.DebuggerFoundation.Debugger.LLDB\"\n"
+                s += "      selectedLauncherIdentifier = \"Xcode.DebuggerFoundation.Launcher.LLDB\"\n"
+                s += "      launchStyle = \"0\"\n"
+                s += "      useCustomWorkingDirectory = \"NO\"\n"
+                s += "      ignoresPersistentStateOnLaunch = \"NO\"\n"
+                s += "      debugDocumentVersioning = \"YES\"\n"
+                s += "      debugServiceExtension = \"internal\"\n"
+                s += "      allowLocationSimulation = \"YES\">\n"
+                s += "      <BuildableProductRunnable\n"
+                s += "         runnableDebuggingMode = \"0\">\n"
+                s += "         <BuildableReference\n"
+                s += "            BuildableIdentifier = \"primary\"\n"
+                s += "            BlueprintIdentifier = \"\(appTarget.guid)\"\n"
+                s += "            BuildableName = \"\(appTarget.name).app\"\n"
+                s += "            BlueprintName = \"\(appTarget.name)\"\n"
+                s += "            ReferencedContainer = \"container:\(appTarget.name).xcodeproj\">\n"
+                s += "         </BuildableReference>\n"
+                s += "      </BuildableProductRunnable>\n"
+                s += "      <AdditionalOptions>\n"
+                s += "      </AdditionalOptions>\n"
+                s += "   </LaunchAction>\n"
+                s += "   <ProfileAction\n"
+                s += "      buildConfiguration = \"Release\"\n"
+                s += "      shouldUseLaunchSchemeArgsEnv = \"YES\"\n"
+                s += "      savedToolIdentifier = \"\"\n"
+                s += "      useCustomWorkingDirectory = \"NO\"\n"
+                s += "      debugDocumentVersioning = \"YES\">\n"
+                s += "      <BuildableProductRunnable\n"
+                s += "         runnableDebuggingMode = \"0\">\n"
+                s += "         <BuildableReference\n"
+                s += "            BuildableIdentifier = \"primary\"\n"
+                s += "            BlueprintIdentifier = \"\(appTarget.guid)\"\n"
+                s += "            BuildableName = \"\(appTarget.name).app\"\n"
+                s += "            BlueprintName = \"\(appTarget.name)\"\n"
+                s += "            ReferencedContainer = \"container:\(appTarget.name).xcodeproj\">\n"
+                s += "         </BuildableReference>\n"
+                s += "      </BuildableProductRunnable>\n"
+                s += "   </ProfileAction>\n"
+                s += "   <AnalyzeAction\n"
+                s += "      buildConfiguration = \"Debug\">\n"
+                s += "   </AnalyzeAction>\n"
+                s += "   <ArchiveAction\n"
+                s += "      buildConfiguration = \"Release\"\n"
+                s += "      revealArchiveInOrganizer = \"YES\">\n"
+                s += "   </ArchiveAction>\n"
+                s += "</Scheme>\n"
+            }
+        }
+    }
+    return s
+}

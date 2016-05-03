@@ -18,28 +18,35 @@ enum OutputType {
     case Executable
     case StaticLibrary
     case Application
+    case TestTarget
 }
 
 import atpkg
-func emit(task: Task, package: Package) {
+func emit(task: Task, testTask: Task?, package: Package) {
     precondition(task.tool == "atllbuild", "Unsupported tool \(task.tool)")
     //make the xcodeproj directory
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     let xcodeproj = Path(taskname+".xcodeproj")
     let _ = try? FS.removeItem(path: xcodeproj, recursive: true)
     try! FS.createDirectory(path: xcodeproj)
-    let str = pbxproj(task: task, package: package)
+    let project = pbxproj(task: task, testTask: testTask, package: package)
+    let str = project.serialize()
     try! str.write(to: Path("\(xcodeproj)/project.pbxproj"))
+
+    try! FS.createDirectory(path: Path("\(xcodeproj)/xcshareddata/xcschemes"), intermediate: true)
+    let schemes = xcscheme(project: project)
+    try! schemes.write(to: Path("\(xcodeproj)/xcshareddata/xcschemes/\(taskname).xcscheme"))
+
 }
 
-func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
+func process(tasks: [Task], testTask: Task?, package: Package) -> [PbxprojSerializable] {
     let task = tasks[0] //pull off head
     //are there dependencies?
     var objects: [PbxprojSerializable] = []
     
     if tasks.count > 1 {
         let nextTasks = Array(tasks[1..<tasks.count])
-        objects.append(contentsOf: process(tasks: nextTasks, package: package))
+        objects.append(contentsOf: process(tasks: nextTasks, testTask: nil, package: package))
     }
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     guard let sourceDescriptions = task["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
@@ -96,9 +103,23 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
 
     
 
-    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith)
+    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, appTarget: nil)
     objects.append(target)
     objects.append(product)
+
+    if let testTask = testTask {
+        guard let testSourceDescriptions = testTask["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
+        let sources = collectSources(sourceDescriptions: testSourceDescriptions, taskForCalculatingPath: testTask).map() {PbxSourceFileReference(path: $0.description)}
+        let testProduct = PbxProductReference(name: taskname+"Tests", type: .TestTarget)
+        let testTarget = PbxNativeTarget(productReference: testProduct, outputType: .TestTarget, sourceFiles: sources, linkFiles: [], appTarget: target)
+        objects.append(testProduct)
+        objects.append(testTarget)
+        for o in sources {
+            objects.append(o)
+        }
+    }
+
+
     for sourceRef in sourceRefs {
         objects.append(sourceRef)
     }
@@ -108,9 +129,9 @@ func process(tasks: [Task], package: Package) -> [PbxprojSerializable] {
     return objects
 }
 
-func pbxproj(task: Task, package: Package) -> String {
+func pbxproj(task: Task, testTask: Task?, package: Package) -> Pbxproj {
     var targets : [PbxNativeTarget] = []
-    var objects = process(tasks: package.prunedDependencyGraph(task: task).reversed(), package: package)
+    var objects = process(tasks: package.prunedDependencyGraph(task: task).reversed(), testTask: testTask, package: package)
     for object in objects {
         if object.dynamicType == PbxNativeTarget.self {
             targets.append(object as! PbxNativeTarget)
@@ -121,5 +142,5 @@ func pbxproj(task: Task, package: Package) -> String {
     let groups = PbxGroups(targets: targets)
     objects.append(groups)
     let p = Pbxproj(objects: objects, rootObjectGUID: project.guid)
-    return p.serialize()
+    return p
 }

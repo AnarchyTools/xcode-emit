@@ -49,6 +49,8 @@ struct Pbxproj: PbxprojSerializable {
     }
 }
 
+
+
 struct Pbxproject: PbxprojSerializable {
     let guid = xcodeguid()
     var targets: [PbxNativeTarget]
@@ -271,6 +273,12 @@ struct PbxGroups : PbxprojSerializable {
     }
 }
 
+class TargetWrapper {
+    var target: PbxNativeTarget
+
+    init(target: PbxNativeTarget) { self.target = target }
+}
+
 struct PbxNativeTarget: PbxprojSerializable {
     let guid = xcodeguid()
     let productReference: PbxProductReference
@@ -280,19 +288,25 @@ struct PbxNativeTarget: PbxprojSerializable {
     let linkFiles: [PbxProductReference]
     let configurationList: PbxTargetConfigurations
 
+    let appTarget: TargetWrapper?
+
     //todo: This should be a more generic type than plists
     let otherFiles: [PbxPlistFileReference]
 
     let phases: PbxPhases
 
-    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference] ) {
+    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference], appTarget: PbxNativeTarget?) {
+        if let a = appTarget {
+            self.appTarget = TargetWrapper(target: a)
+        }
+        else { self.appTarget = nil}
         self.productReference = productReference
         self.outputType = outputType
         self.phases = PbxPhases(sourceFiles: sourceFiles, linkFiles: linkFiles)
         self.sourceFiles = sourceFiles
         self.linkFiles = linkFiles
-
-        if outputType == OutputType.Application {
+        switch (outputType) {
+            case .Application:
             var s = ""
             s += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             s += "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
@@ -323,10 +337,42 @@ struct PbxNativeTarget: PbxprojSerializable {
             let plistName = "\(productReference.name)-xcode-emit-Info.plist"
             try! s.write(to: Path(plistName))
             self.otherFiles = [PbxPlistFileReference(path: plistName)]
-            self.configurationList = PbxTargetConfigurations(plistPath: plistName)
-        }
-        else {
-            self.configurationList = PbxTargetConfigurations(plistPath: nil)
+            self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: nil)
+            case .TestTarget:
+            var s = ""
+            s += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            s += "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+            s += "<plist version=\"1.0\">\n"
+            s += "<dict>\n"
+            s += "  <key>CFBundleDevelopmentRegion</key>\n"
+            s += "  <string>en</string>\n"
+            s += "  <key>CFBundleExecutable</key>\n"
+            s += "  <string>$(EXECUTABLE_NAME)</string>\n"
+            s += "  <key>CFBundleIdentifier</key>\n"
+            s += "  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>\n"
+            s += "  <key>CFBundleInfoDictionaryVersion</key>\n"
+            s += "  <string>6.0</string>\n"
+            s += "  <key>CFBundleName</key>\n"
+            s += "  <string>$(PRODUCT_NAME)</string>\n"
+            s += "  <key>CFBundlePackageType</key>\n"
+            s += "  <string>BNDL</string>\n"
+            s += "  <key>CFBundleShortVersionString</key>\n"
+            s += "  <string>1.0</string>\n"
+            s += "  <key>CFBundleSignature</key>\n"
+            s += "  <string>????</string>\n"
+            s += "  <key>CFBundleVersion</key>\n"
+            s += "  <string>1</string>\n"
+            s += "  <key>LSRequiresIPhoneOS</key>\n"
+            s += "  <true/>\n"
+            s += "</dict>\n"
+            s += "</plist>\n"
+            let plistName = "\(productReference.name)-xcode-emit-Info.plist"
+            try! s.write(to: Path(plistName))
+            self.otherFiles = [PbxPlistFileReference(path: plistName)]
+            self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: appTarget!.name)
+
+            case .StaticLibrary, .Executable:
+            self.configurationList = PbxTargetConfigurations(plistPath: nil, testThisApp: nil)
             self.otherFiles = []
         }
     }
@@ -357,6 +403,8 @@ struct PbxNativeTarget: PbxprojSerializable {
             s += "    productType = \"com.apple.product-type.library.dynamic\";"
         case .Application:
             s += "    productType = \"com.apple.product-type.application\";\n"
+        case .TestTarget:
+            s += "    productType = \"com.apple.product-type.bundle.unit-test\";\n"
         }
         s += "};\n"
         s += "/* End PBXNativeTarget section */\n"
@@ -373,6 +421,9 @@ struct PbxTargetConfigurations: PbxprojSerializable {
     let debugGUID = xcodeguid()
     let releaseGUID = xcodeguid()
     let plistPath: String?
+    ///If non-nil, we will emit a test target to test the given app.  Use the name of the executable, a.k.a. the app name without `.app` extension
+    let testThisApp: String?
+
 
     func serialize() -> String {
 
@@ -387,7 +438,12 @@ struct PbxTargetConfigurations: PbxprojSerializable {
         if let plistPath = self.plistPath {
             sx += "        INFOPLIST_FILE = \(plistPath);\n"
         }
-        sx += "        PRODUCT_BUNDLE_IDENTIFIER = org.anarchytools.XcodeEmittedApp;\n"
+        sx += "        PRODUCT_BUNDLE_IDENTIFIER = org.anarchytools.XcodeEmittedApp-\(guid);\n"
+        if let t = testThisApp {
+            sx += "        BUNDLE_LOADER = \"$(TEST_HOST)\";\n"
+            sx += "        LD_RUNPATH_SEARCH_PATHS = \"$(inherited) @executable_path/Frameworks @loader_path/Frameworks\";\n"
+            sx += "        TEST_HOST = \"$(BUILT_PRODUCTS_DIR)/\(t).app/\(t)\";\n"
+        }
 
         var s = ""
         s += "\(guid) /* Build configuration list for PBXNativeTarget */ = {\n"
@@ -469,6 +525,7 @@ struct PbxProductReference: PbxprojSerializable {
     enum ReferenceType: String {
         case Executable = "compiled.mach-o.executable"
         case Application = "wrapper.application"
+        case TestTarget = "wrapper.cfbundle"
     }
 
     let name: String
@@ -482,6 +539,8 @@ struct PbxProductReference: PbxprojSerializable {
             return name
             case .Application:
             return "\(name).app"
+            case .TestTarget:
+            return "\(name).xctest"
         }
     }
 
