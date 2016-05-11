@@ -16,4 +16,4 @@ osx:
     artifacts:
         paths:
             - bin/xcode_emit*.tar.xz
-            - bin/xcode_emit.rb
+            - bin/xcode-emit.rb
