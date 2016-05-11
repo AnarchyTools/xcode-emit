@@ -17,6 +17,7 @@
 (package
   :name "xcode-emit"
   :import-packages ["atpkg/build.atpkg"]
+  :version "0.4"
   
   :tasks {
           :xcodeemit {
@@ -27,13 +28,26 @@
             :dependencies ["atpkg.atpkg" "atfoundation.atfoundation"]
             :link-with ["atpkg.a" "atfoundation.a"]
             :link-options ["-static-stdlib"]
-            :publish-product true
+            :executable-name "xcode-emit"
           }
 
           :default {
-            :tool "shell"
+            :tool "nop"
             :dependencies ["xcodeemit"]
-            :script "mv .atllbuild/products/xcode_emit .atllbuild/products/xcode-emit"
+          }
+
+          :atbin {
+            :tool "packageatbin"
+            :name "xcode_emit"
+            :atllbuild-task "xcodeemit"
+            :platforms ["all"]
+          }
+
+          :package {
+            :tool "package-homebrew.attool"
+            :name "xcode_emit"
+            :dependencies ["atbin"]
+            :github-project "AnarchyTools/xcode-emit"
           }
 
           :ioscheck {

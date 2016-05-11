@@ -8,13 +8,12 @@ osx:
     stage: build
     script: 
         - atbuild check
-        - mkdir xcode-emit-${CI_BUILD_REF}
-        - cp bin/xcode_emit xcode-emit-${CI_BUILD_REF}/xcode-emit
-        - tar cJf xcode-emit-${CI_BUILD_REF}-osx.tar.xz xcode-emit-${CI_BUILD_REF}
+        - atbuild package
     tags:
         - openswift
         - atbuild
 
     artifacts:
         paths:
-            - xcode-emit-${CI_BUILD_REF}-osx.tar.xz
+            - bin/xcode_emit*.tar.xz
+            - bin/xcode_emit.rb
