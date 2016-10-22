@@ -8,7 +8,7 @@ osx:
     stage: build
     script: 
         - atbuild check
-        - atbuild package
+        - atbuild package --configuration release
     tags:
         - openswift
         - atbuild
