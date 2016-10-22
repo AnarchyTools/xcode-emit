@@ -67,7 +67,7 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
     }
     
     var linkWith : [PbxProductReference] = []
-    if let l = task["link-with"]?.vector {
+    if let l = task["link-with-product"]?.vector {
         for item in l {
             guard let str = item.string else { fatalError("Not string link target \(item)")}
             //find the productRef to link to
