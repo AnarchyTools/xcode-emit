@@ -17,7 +17,7 @@
 (package
   :name "xcode-emit"
   :import-packages ["atpkg/build.atpkg"]
-  :version "0.4"
+  :version "1.0"
   
   :tasks {
           :xcodeemit {
