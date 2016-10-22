@@ -134,7 +134,7 @@ func pbxproj(task: Task, testTask: Task?, package: Package) -> Pbxproj {
     var targets : [PbxNativeTarget] = []
     var objects = process(tasks: package.prunedDependencyGraph(task: task).reversed(), testTask: testTask, package: package, xcodeprojGUID: guid)
     for object in objects {
-        if object.dynamicType == PbxNativeTarget.self {
+        if type(of: object) == PbxNativeTarget.self {
             targets.append(object as! PbxNativeTarget)
         }
     }

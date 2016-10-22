@@ -27,26 +27,26 @@ func usage() {
 }
 
 
-if Process.arguments.count <= 1 {
+if CommandLine.arguments.count <= 1 {
     usage()
     exit(1)
 }
-if Process.arguments[1] == "--help" {
+if CommandLine.arguments[1] == "--help" {
     usage()
     exit(1)
 }
 var testTaskName: String? = nil
 
-for (x,arg) in Process.arguments.enumerated() {
-    if arg == "--platform" && Process.arguments[x+1] == "ios" {
+for (x,arg) in CommandLine.arguments.enumerated() {
+    if arg == "--platform" && CommandLine.arguments[x+1] == "ios" {
         iosPlatform = true
     }
     if arg == "--test-task" {
-        testTaskName = Process.arguments[x+1]
+        testTaskName = CommandLine.arguments[x+1]
     }
 }
 
-let taskName = Process.arguments[1]
+let taskName = CommandLine.arguments[1]
 
 
 let package = try! Package(filepath:Path("build.atpkg"), overlay: [], focusOnTask:taskName)

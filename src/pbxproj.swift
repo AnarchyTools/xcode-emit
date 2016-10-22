@@ -167,6 +167,7 @@ struct PbxConfigurationHacks : PbxprojSerializable {
             s += "        SDKROOT = macosx;\n"
         }
         s += "        SWIFT_OPTIMIZATION_LEVEL = \"-Onone\";\n"
+        s += "        SWIFT_VERSION = \"3.0\";\n"
         s += "    };\n"
         s += "    name = Debug;\n"
         s += "};\n"
@@ -209,6 +210,8 @@ struct PbxConfigurationHacks : PbxprojSerializable {
         else {
             s += "        SDKROOT = macosx;\n"
         }
+        s += "        SWIFT_VERSION = \"3.0\";\n"
+
         s += "    };\n"
         s += "    name = Release;\n"
         s += "};\n"

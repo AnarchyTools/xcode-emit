@@ -26,7 +26,7 @@
             :name "xcode_emit"
             :output-type "executable"
             :dependencies ["atpkg.atpkg" "atfoundation.atfoundation"]
-            :link-with ["atpkg.a" "atfoundation.a"]
+            :link-with-product ["atpkg.a" "atfoundation.a"]
             :link-options ["-static-stdlib"]
             :executable-name "xcode-emit"
           }
