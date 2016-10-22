@@ -48,6 +48,11 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
         let nextTasks = Array(tasks[1..<tasks.count])
         objects.append(contentsOf: process(tasks: nextTasks, testTask: nil, package: package, xcodeprojGUID: xcodeprojGUID))
     }
+    if task.tool != "atllbuild" {
+        print("Skipping task \(task.qualifiedName) because of non-atllbuild type")
+        let nextTasks = Array(tasks[1..<tasks.count])
+        return process(tasks: nextTasks, testTask: testTask, package: package, xcodeprojGUID: xcodeprojGUID)
+    }
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     guard let sourceDescriptions = task["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
     let sources = collectSources(sourceDescriptions: sourceDescriptions, taskForCalculatingPath: task)
