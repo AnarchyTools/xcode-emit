@@ -133,8 +133,10 @@ struct PbxConfigurationHacks : PbxprojSerializable {
         s += "        CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;\n"
         s += "        CLANG_WARN_EMPTY_BODY = YES;\n"
         s += "        CLANG_WARN_ENUM_CONVERSION = YES;\n"
+        s += "        CLANG_WARN_INFINITE_RECURSION = YES;\n"
         s += "        CLANG_WARN_INT_CONVERSION = YES;\n"
         s += "        CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;\n"
+        s += "        CLANG_WARN_SUSPICIOUS_MOVE = YES;\n"
         s += "        CLANG_WARN_UNREACHABLE_CODE = YES;\n"
         s += "        CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;\n"
         s += "        CODE_SIGN_IDENTITY = \"-\";\n"
@@ -184,8 +186,10 @@ struct PbxConfigurationHacks : PbxprojSerializable {
         s += "        CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;\n"
         s += "        CLANG_WARN_EMPTY_BODY = YES;\n"
         s += "        CLANG_WARN_ENUM_CONVERSION = YES;\n"
+        s += "        CLANG_WARN_INFINITE_RECURSION = YES;\n"
         s += "        CLANG_WARN_INT_CONVERSION = YES;\n"
         s += "        CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;\n"
+        s += "        CLANG_WARN_SUSPICIOUS_MOVE = YES;\n"
         s += "        CLANG_WARN_UNREACHABLE_CODE = YES;\n"
         s += "        CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;\n"
         s += "        CODE_SIGN_IDENTITY = \"-\";\n"
@@ -210,6 +214,7 @@ struct PbxConfigurationHacks : PbxprojSerializable {
         else {
             s += "        SDKROOT = macosx;\n"
         }
+        s += "        SWIFT_OPTIMIZATION_LEVEL = \"-Owholemodule\";\n"
         s += "        SWIFT_VERSION = \"3.0\";\n"
 
         s += "    };\n"
