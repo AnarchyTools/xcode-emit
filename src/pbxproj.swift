@@ -639,7 +639,7 @@ struct PbxPlistFileReference: PbxFileReference {
         self.path = path
     }
     func serialize() -> String {
-        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \(path); path = \"\(path)\"; sourceTree = \"<group>\"; };"
+        let s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \(path); path = \"\(path)\"; sourceTree = \"<group>\"; };"
         return s
     }
 }
@@ -651,7 +651,7 @@ struct PbxHeaderFileReference: PbxFileReference {
         self.path = path
     }
     func serialize() -> String {
-        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = \(path); path = \"\(path)\"; sourceTree = \"<group>\"; };"
+        let s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = \(path); path = \"\(path)\"; sourceTree = \"<group>\"; };"
         return s
     }
 }
