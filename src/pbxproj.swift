@@ -565,7 +565,7 @@ struct PbxProductReference: PbxprojSerializable {
         self.type = type
     }
     func serialize() -> String {
-        var s =  "\(guid) /* \(name) */ = {isa = PBXFileReference; explicitFileType = \"\(self.type.rawValue)\"; includeInIndex = 0; path = \(path); sourceTree = BUILT_PRODUCTS_DIR; };\n"
+        var s =  "\(guid) /* \(name) */ = {isa = PBXFileReference; explicitFileType = \"\(self.type.rawValue)\"; includeInIndex = 0; path = \"\(path)\"; sourceTree = BUILT_PRODUCTS_DIR; };\n"
         s += buildFile.serialize()
         return s
     }
@@ -589,7 +589,7 @@ struct PbxStaticLibraryFileReference: PbxprojSerializable {
         buildFile = PbxBuildFile(path: path, fileRefGUID: guid)
     }
     func serialize() -> String {
-        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = \(path); path = \(path); sourceTree = \"<group>\"; };"
+        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = \(path); path = \"\(path)\"; sourceTree = \"<group>\"; };"
         s += buildFile.serialize()
         return s
     }
@@ -602,7 +602,7 @@ struct PbxPlistFileReference: PbxprojSerializable {
         self.path = path
     }
     func serialize() -> String {
-        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \(path); path = \(path); sourceTree = \"<group>\"; };"
+        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \(path); path = \"\(path)\"; sourceTree = \"<group>\"; };"
         return s
     }
 }
@@ -641,7 +641,7 @@ struct PbxSourceFileReference: PbxprojSerializable  {
         buildFile = PbxBuildFile(path: path, fileRefGUID: guid)
     }
     func serialize() -> String {
-        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = \(path); sourceTree = \"<group>\"; };\n"
+        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = \"\(path)\"; sourceTree = \"<group>\"; };\n"
         s += buildFile.serialize()
         return s
     }
