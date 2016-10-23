@@ -300,7 +300,7 @@ struct PbxNativeTarget: PbxprojSerializable {
 
     let phases: PbxPhases
 
-    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference], otherFiles: [PbxFileReference], bridgingHeader: String?, appTarget: PbxNativeTarget?, xcodeprojGUID: String) {
+    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference], otherFiles: [PbxFileReference], bridgingHeader: String?, headerSearchPaths: [String]?, otherLdFlags: [String]?, appTarget: PbxNativeTarget?, xcodeprojGUID: String) {
         if let a = appTarget {
             self.appTarget = TargetWrapper(target: a)
         }
@@ -345,7 +345,7 @@ struct PbxNativeTarget: PbxprojSerializable {
             let plistName = "\(productReference.name)-xcode-emit-Info.plist"
             try! s.write(to: Path(plistName))
             plistFileRef = PbxPlistFileReference(path: plistName)
-            self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: nil, bridgingHeader: bridgingHeader)
+            self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: nil, bridgingHeader: bridgingHeader, headerSearchPaths: headerSearchPaths, otherLdFlags: otherLdFlags)
             self.dependencies = []
             case .TestTarget:
             var s = ""
@@ -378,11 +378,11 @@ struct PbxNativeTarget: PbxprojSerializable {
             let plistName = "\(productReference.name)-xcode-emit-Info.plist"
             try! s.write(to: Path(plistName))
             plistFileRef = PbxPlistFileReference(path: plistName)
-            self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: appTarget!.name, bridgingHeader: bridgingHeader)
+            self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: appTarget!.name, bridgingHeader: bridgingHeader,  headerSearchPaths: headerSearchPaths, otherLdFlags: otherLdFlags)
             self.dependencies = [PbxTargetDependency(target: appTarget!, projectGUID: xcodeprojGUID)]
 
             case .StaticLibrary, .Executable:
-            self.configurationList = PbxTargetConfigurations(plistPath: nil, testThisApp: nil, bridgingHeader: bridgingHeader)
+            self.configurationList = PbxTargetConfigurations(plistPath: nil, testThisApp: nil, bridgingHeader: bridgingHeader,  headerSearchPaths: headerSearchPaths, otherLdFlags: otherLdFlags)
             self.dependencies = []
             plistFileRef = nil
         }
@@ -452,6 +452,8 @@ struct PbxTargetConfigurations: PbxprojSerializable {
     ///If non-nil, we will emit a test target to test the given app.  Use the name of the executable, a.k.a. the app name without `.app` extension
     let testThisApp: String?
     let bridgingHeader: String?
+    let headerSearchPaths: [String]?
+    let otherLdFlags: [String]?
 
     func serialize() -> String {
 
@@ -474,6 +476,18 @@ struct PbxTargetConfigurations: PbxprojSerializable {
         }
         if let bridgingHeader = bridgingHeader {
             sx += "        SWIFT_OBJC_BRIDGING_HEADER = \"\(bridgingHeader)\";\n"
+        }
+        if let of = otherLdFlags {
+            //SR-3026
+            let lexp1 = of.map{"\"\($0)\""}
+            let lexp2 = lexp1.joined(separator: ",")
+            sx += "        OTHER_LDFLAGS = ( \(lexp2) );\n"
+        }
+        if let searchPaths = headerSearchPaths {
+            //SR-3026
+            let lexp1 = searchPaths.map{"\"\($0)\""}
+            let lexp2 = lexp1.joined(separator: ",")
+            sx += "        HEADER_SEARCH_PATHS = ( \(lexp2) );\n"
         }
 
         var s = ""

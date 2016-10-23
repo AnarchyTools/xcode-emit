@@ -109,8 +109,23 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
     let product = PbxProductReference(name: taskname, type:type)
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0.description)}
     
+    var ldFlags: [String]? = nil
+    if let flags = task["link-options"]?.vector {
+        ldFlags = []
+        for flag in flags.flatMap({$0.string}){
+            ldFlags!.append(flag)
+        }
+    }
 
-    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, otherFiles: [], bridgingHeader: task["umbrella-header"]?.string, appTarget: nil, xcodeprojGUID: xcodeprojGUID )
+    var headerSearchPaths: [String]? = nil
+    if let paths = task["include-with-user"]?.vector {
+        headerSearchPaths = []
+        for header in paths.flatMap({$0.string}) {
+            headerSearchPaths!.append(header)
+        }
+    }
+
+    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, otherFiles: [], bridgingHeader: task["umbrella-header"]?.string, headerSearchPaths: headerSearchPaths, otherLdFlags: ldFlags, appTarget: nil, xcodeprojGUID: xcodeprojGUID )
     objects.append(target)
     objects.append(product)
 
@@ -118,7 +133,7 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
         guard let testSourceDescriptions = testTask["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
         let sources = collectSources(sourceDescriptions: testSourceDescriptions, taskForCalculatingPath: testTask).map() {PbxSourceFileReference(path: $0.description)}
         let testProduct = PbxProductReference(name: taskname+"Tests", type: .TestTarget)
-        let testTarget = PbxNativeTarget(productReference: testProduct, outputType: .TestTarget, sourceFiles: sources, linkFiles: [], otherFiles: [], bridgingHeader: nil, appTarget: target, xcodeprojGUID: xcodeprojGUID)
+        let testTarget = PbxNativeTarget(productReference: testProduct, outputType: .TestTarget, sourceFiles: sources, linkFiles: [], otherFiles: [], bridgingHeader: nil, headerSearchPaths: nil, otherLdFlags: nil, appTarget: target, xcodeprojGUID: xcodeprojGUID)
         objects.append(testProduct)
         objects.append(testTarget)
         for o in sources {
