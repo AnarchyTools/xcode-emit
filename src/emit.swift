@@ -121,11 +121,18 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
     if let paths = task["include-with-user"]?.vector {
         headerSearchPaths = []
         for header in paths.flatMap({$0.string}) {
-            headerSearchPaths!.append(header)
+            headerSearchPaths!.append("user/" + header)
         }
     }
+    let bridgingHeader: String?
+    if let bf = task["umbrella-header"]?.string {
+        bridgingHeader = task.importedPath.description + "/" + bf
+    }
+    else {
+        bridgingHeader = nil
+    }
 
-    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, otherFiles: [], bridgingHeader: task["umbrella-header"]?.string, headerSearchPaths: headerSearchPaths, otherLdFlags: ldFlags, appTarget: nil, xcodeprojGUID: xcodeprojGUID )
+    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, otherFiles: [], bridgingHeader: bridgingHeader, headerSearchPaths: headerSearchPaths, otherLdFlags: ldFlags, appTarget: nil, xcodeprojGUID: xcodeprojGUID )
     objects.append(target)
     objects.append(product)
 
