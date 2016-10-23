@@ -49,7 +49,7 @@ for (x,arg) in CommandLine.arguments.enumerated() {
 let taskName = CommandLine.arguments[1]
 
 
-let package = try! Package(filepath:Path("build.atpkg"), overlay: [], focusOnTask:taskName)
+let package = try! Package(filepath:Path("build.atpkg"), overlay: ["at.xcode-emit"], focusOnTask:taskName)
 
 
 guard let task = package.tasks[taskName] else { fatalError("Can't find task named \(taskName)")}
