@@ -296,11 +296,11 @@ struct PbxNativeTarget: PbxprojSerializable {
     let appTarget: TargetWrapper?
 
     //todo: This should be a more generic type than plists
-    let otherFiles: [PbxPlistFileReference]
+    let otherFiles: [PbxFileReference]
 
     let phases: PbxPhases
 
-    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference], appTarget: PbxNativeTarget?, xcodeprojGUID: String) {
+    init(productReference: PbxProductReference, outputType: OutputType, sourceFiles: [PbxSourceFileReference], linkFiles:[PbxProductReference], otherFiles: [PbxFileReference], appTarget: PbxNativeTarget?, xcodeprojGUID: String) {
         if let a = appTarget {
             self.appTarget = TargetWrapper(target: a)
         }
@@ -374,13 +374,13 @@ struct PbxNativeTarget: PbxprojSerializable {
             s += "</plist>\n"
             let plistName = "\(productReference.name)-xcode-emit-Info.plist"
             try! s.write(to: Path(plistName))
-            self.otherFiles = [PbxPlistFileReference(path: plistName)]
+            self.otherFiles = [PbxPlistFileReference(path: plistName)] + otherFiles
             self.configurationList = PbxTargetConfigurations(plistPath: plistName, testThisApp: appTarget!.name)
             self.dependencies = [PbxTargetDependency(target: appTarget!, projectGUID: xcodeprojGUID)]
 
             case .StaticLibrary, .Executable:
             self.configurationList = PbxTargetConfigurations(plistPath: nil, testThisApp: nil)
-            self.otherFiles = []
+            self.otherFiles = otherFiles
             self.dependencies = []
         }
     }
@@ -571,6 +571,13 @@ struct PbxProductReference: PbxprojSerializable {
     }
 }
 
+///a generic type for anything in the PBXFileReference section
+///todo: consider reparenting existing types to this
+protocol PbxFileReference: PbxprojSerializable {
+    var guid: String { get }
+    var path: String { get }
+}
+
 struct PbxBuildFile: PbxprojSerializable {
     let guid = xcodeguid()
     let path: String
@@ -595,7 +602,7 @@ struct PbxStaticLibraryFileReference: PbxprojSerializable {
     }
 }
 
-struct PbxPlistFileReference: PbxprojSerializable {
+struct PbxPlistFileReference: PbxFileReference {
     let path: String
     let guid = xcodeguid()
     init(path: String) {
@@ -603,6 +610,18 @@ struct PbxPlistFileReference: PbxprojSerializable {
     }
     func serialize() -> String {
         var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \(path); path = \"\(path)\"; sourceTree = \"<group>\"; };"
+        return s
+    }
+}
+
+struct PbxHeaderFileReference: PbxFileReference {
+    let path: String
+    let guid = xcodeguid()
+    init(path: String) {
+        self.path = path
+    }
+    func serialize() -> String {
+        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = \(path); path = \"\(path)\"; sourceTree = \"<group>\"; };"
         return s
     }
 }

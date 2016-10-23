@@ -109,9 +109,14 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
     let product = PbxProductReference(name: taskname, type:type)
     let sourceRefs = sources.map() {PbxSourceFileReference(path:$0.description)}
 
+    var otherFiles: [PbxFileReference] = []
+
+    if let header = task["umbrella-header"]?.string {
+        otherFiles.append(PbxHeaderFileReference(path: header))
+    }
     
 
-    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, appTarget: nil, xcodeprojGUID: xcodeprojGUID )
+    let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, otherFiles: otherFiles, appTarget: nil, xcodeprojGUID: xcodeprojGUID )
     objects.append(target)
     objects.append(product)
 
@@ -119,7 +124,7 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
         guard let testSourceDescriptions = testTask["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
         let sources = collectSources(sourceDescriptions: testSourceDescriptions, taskForCalculatingPath: testTask).map() {PbxSourceFileReference(path: $0.description)}
         let testProduct = PbxProductReference(name: taskname+"Tests", type: .TestTarget)
-        let testTarget = PbxNativeTarget(productReference: testProduct, outputType: .TestTarget, sourceFiles: sources, linkFiles: [], appTarget: target, xcodeprojGUID: xcodeprojGUID)
+        let testTarget = PbxNativeTarget(productReference: testProduct, outputType: .TestTarget, sourceFiles: sources, linkFiles: [], otherFiles: [], appTarget: target, xcodeprojGUID: xcodeprojGUID)
         objects.append(testProduct)
         objects.append(testTarget)
         for o in sources {
