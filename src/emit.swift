@@ -95,7 +95,6 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
                     }
                     break
                 }
-                else { print("didn't match \(file.name) \(str)") }
             }
         }
     }
