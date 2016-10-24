@@ -74,7 +74,7 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
         fatalError("Unsupported output type \(task["output-type"])")
     }
     
-    var linkWith : [PbxProductReference] = []
+    var _linkWith : [PbxProductReference] = []
     if let l = task["link-with-product"]?.vector {
         for item in l {
             guard let str = item.string else { fatalError("Not string link target \(item)")}
@@ -83,15 +83,15 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
                 guard let file = object as? PbxProductReference else { continue }
                 precondition(str.hasSuffix(".a")) //not sure what to do in this case
                 if file.name + ".a" == str {
-                    linkWith.append(file)
+                    _linkWith.append(file)
                     //because we use dynamic libraries (due to rdar://24221024)
-                    //we have to link with all our dependencies' linkWith as well
+                    //we have to link with all our dependencies' _linkWith as well
                     for o in objects {
                         //find the target for the file we're linking
                         guard let target = o as? PbxNativeTarget else { continue }
                         if target.productReference.name != file.name { continue }
                         //append its dependencies
-                        linkWith.append(contentsOf: target.linkFiles)
+                        _linkWith.append(contentsOf: target.linkFiles)
                     }
                     break
                 }
@@ -99,6 +99,11 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
             }
         }
     }
+    var linkWith: [PbxProductReference] = []
+    for lw in _linkWith {
+        if !linkWith.map({$0.guid}).contains(lw.guid) { linkWith.append(lw) }
+    }
+
     let type :PbxProductReference.ReferenceType
     if iosPlatform {
         type = PbxProductReference.ReferenceType.Application
