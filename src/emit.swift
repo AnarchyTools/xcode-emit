@@ -39,6 +39,23 @@ func emit(task: Task, testTask: Task?, package: Package) {
 
 }
 
+private func _collectSources(sourceDescriptions: [String], taskForCalculatingPath: Task) -> [String] {
+    let sources = collectSources(sourceDescriptions: sourceDescriptions, taskForCalculatingPath: taskForCalculatingPath)
+    //xcode gets frightened if a path has too many symlinks, and autocomplete goes away and refuses to come out to play
+    //to solve this, we go through python
+    var normalSources: [String] = []
+    for source in sources {
+        var output = ""
+        guard anarchySystem("python3 -c \"import os.path;import sys; print(os.path.relpath(os.path.realpath(sys.argv[1])))\" \"\(source)\"", environment:[:], redirectOutput: &output) == 0 else {
+            fatalError("Can't normalize path \(source)")
+        }
+        //remove trailing \n
+        output.remove(at: output.characters.index(before: output.characters.endIndex))
+        normalSources.append(output)
+    }
+    return normalSources
+}
+
 func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: String) -> [PbxprojSerializable] {
     let task = tasks[0] //pull off head
     //are there dependencies?
@@ -58,7 +75,7 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
     }
     guard let taskname = task["name"]?.string else { fatalError("No task name.")}
     guard let sourceDescriptions = task["sources"]?.vector?.flatMap({$0.string}) else { fatalError("Can't find sources for atllbuild.") }
-    let sources = collectSources(sourceDescriptions: sourceDescriptions, taskForCalculatingPath: task)
+    let sources = _collectSources(sourceDescriptions: sourceDescriptions, taskForCalculatingPath: task)
     //emit the pbxproj
     let outputType : OutputType
     if task["output-type"]?.string == "executable" {
