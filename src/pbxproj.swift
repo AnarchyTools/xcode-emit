@@ -696,7 +696,15 @@ struct PbxSourceFileReference: PbxprojSerializable  {
         buildFile = PbxBuildFile(path: path, fileRefGUID: guid)
     }
     func serialize() -> String {
-        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = \"\(path)\"; sourceTree = \"<group>\"; };\n"
+        let ext: String
+        if path.hasSuffix(".swift") {
+            ext = "swift"
+        }
+        else if path.hasSuffix(".c") {
+            ext = "c"
+        }
+        else { fatalError("Unknown extension for \(path)")}
+        var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.\(ext); path = \"\(path)\"; sourceTree = \"<group>\"; };\n"
         s += buildFile.serialize()
         return s
     }
