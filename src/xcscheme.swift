@@ -184,7 +184,7 @@ func xcscheme(project: Pbxproj) -> String {
                     s += "            BlueprintIdentifier = \"\(obj.guid)\"\n"
                     s += "            BuildableName = \"\(obj.name)\"\n"
                     s += "            BlueprintName = \"\(obj.name)\"\n"
-                    s += "            ReferencedContainer = \"container:GitLabKitTests.xcodeproj\">\n"
+                    s += "            ReferencedContainer = \"container:\(obj.name).xcodeproj\">\n"
                     s += "         </BuildableReference>\n"
                     s += "      </BuildableProductRunnable>\n"
                     s += "      <AdditionalOptions>\n"
