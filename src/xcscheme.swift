@@ -172,7 +172,7 @@ func xcscheme(project: Pbxproj) -> String {
                     s += "      selectedLauncherIdentifier = \"Xcode.DebuggerFoundation.Launcher.LLDB\"\n"
                     s += "      launchStyle = \"0\"\n"
                     s += "      useCustomWorkingDirectory = \"YES\"\n"
-                    s += "      customWorkingDirectory = \"$(PROJECT_DIR)/bin\""
+                    s += "      customWorkingDirectory = \"$(PROJECT_DIR)\""
                     s += "      ignoresPersistentStateOnLaunch = \"NO\"\n"
                     s += "      debugDocumentVersioning = \"YES\"\n"
                     s += "      debugServiceExtension = \"internal\"\n"
