@@ -494,6 +494,7 @@ struct PbxTargetConfigurations: PbxprojSerializable {
             let lexp2 = lexp1.joined(separator: ",")
             sx += "        HEADER_SEARCH_PATHS = ( \(lexp2) );\n"
         }
+        sx += "        OTHER_SWIFT_FLAGS=\"-DATBUILD\";\n"
 
         var s = ""
         s += "\(guid) /* Build configuration list for PBXNativeTarget */ = {\n"
