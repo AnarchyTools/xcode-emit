@@ -701,7 +701,7 @@ struct PbxSourceFileReference: PbxprojSerializable  {
             ext = "swift"
         }
         else if path.hasSuffix(".c") {
-            ext = "c"
+            ext = "c.c"
         }
         else { fatalError("Unknown extension for \(path)")}
         var s = "\(guid) /* \(path) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.\(ext); path = \"\(path)\"; sourceTree = \"<group>\"; };\n"
