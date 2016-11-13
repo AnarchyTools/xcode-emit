@@ -151,7 +151,14 @@ func process(tasks: [Task], testTask: Task?, package: Package, xcodeprojGUID: St
         bridgingHeader = task.importedPath.description + "/" + bf
     }
     else {
-        bridgingHeader = nil
+        if headerRefs.count == 1 {
+            bridgingHeader = task.importedPath.description + "/" + headerRefs[0].path
+        }
+        else if headerRefs.count >= 1 {
+            print("Warning: don't support a bridging header when multiple headers (\(headerRefs)) are used")
+            bridgingHeader = nil
+        }
+        else { bridgingHeader = nil }
     }
 
     let target = PbxNativeTarget(productReference: product, outputType: outputType, sourceFiles: sourceRefs, linkFiles: linkWith, otherFiles: headerRefs, bridgingHeader: bridgingHeader, headerSearchPaths: headerSearchPaths, otherLdFlags: ldFlags, appTarget: nil, xcodeprojGUID: xcodeprojGUID )
